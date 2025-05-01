@@ -858,8 +858,10 @@ type MergeGroup struct {
 //
 // GitHub API docs: https://docs.github.com/developers/webhooks-and-events/webhook-events-and-payloads#merge_group
 type MergeGroupEvent struct {
-	// The action that was performed. Currently, can only be checks_requested.
+	// The action that was performed. Possible values are: "checks_requested", "destroyed".
 	Action *string `json:"action,omitempty"`
+	// Reason is populated when the action is "destroyed". Possible values: "merged", "invalidated", "dequeued".
+	Reason *string `json:"reason,omitempty"`
 	// The merge group.
 	MergeGroup *MergeGroup `json:"merge_group,omitempty"`
 
@@ -1442,6 +1444,26 @@ type PushEventRepository struct {
 type PushEventRepoOwner struct {
 	Name  *string `json:"name,omitempty"`
 	Email *string `json:"email,omitempty"`
+}
+
+// RegistryPackageEvent represents activity related to GitHub Packages.
+// The Webhook event name is "registry_package".
+//
+// This event is triggered when a GitHub Package is published or updated.
+//
+// GitHub API docs: https://docs.github.com/en/webhooks/webhook-events-and-payloads#registry_package
+type RegistryPackageEvent struct {
+	// Action is the action that was performed.
+	// Can be "published" or "updated".
+	Action          *string       `json:"action,omitempty"`
+	RegistryPackage *Package      `json:"registry_package,omitempty"`
+	Repository      *Repository   `json:"repository,omitempty"`
+	Organization    *Organization `json:"organization,omitempty"`
+	Enterprise      *Enterprise   `json:"enterprise,omitempty"`
+	Sender          *User         `json:"sender,omitempty"`
+
+	// The following fields are only populated by Webhook events.
+	Installation *Installation `json:"installation,omitempty"`
 }
 
 // ReleaseEvent is triggered when a release is published, unpublished, created,
