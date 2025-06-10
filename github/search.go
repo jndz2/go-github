@@ -300,7 +300,7 @@ func (s *SearchService) Labels(ctx context.Context, repoID int64, query string, 
 //
 // If searchParameters.Query includes multiple condition, it MUST NOT include "+" as condition separator.
 // For example, querying with "language:c++" and "leveldb", then searchParameters.Query should be "language:c++ leveldb" but not "language:c+++leveldb".
-func (s *SearchService) search(ctx context.Context, searchType string, parameters *searchParameters, opts *SearchOptions, result interface{}) (*Response, error) {
+func (s *SearchService) search(ctx context.Context, searchType string, parameters *searchParameters, opts *SearchOptions, result any) (*Response, error) {
 	params, err := qs.Values(opts)
 	if err != nil {
 		return nil, err
@@ -317,20 +317,20 @@ func (s *SearchService) search(ctx context.Context, searchType string, parameter
 		return nil, err
 	}
 	var acceptHeaders []string
-	switch {
-	case searchType == "commits":
+	switch searchType {
+	case "commits":
 		// Accept header for search commits preview endpoint
 		// TODO: remove custom Accept header when this API fully launches.
 		acceptHeaders = append(acceptHeaders, mediaTypeCommitSearchPreview)
-	case searchType == "topics":
+	case "topics":
 		// Accept header for search repositories based on topics preview endpoint
 		// TODO: remove custom Accept header when this API fully launches.
 		acceptHeaders = append(acceptHeaders, mediaTypeTopicsPreview)
-	case searchType == "repositories":
+	case "repositories":
 		// Accept header for search repositories based on topics preview endpoint
 		// TODO: remove custom Accept header when this API fully launches.
 		acceptHeaders = append(acceptHeaders, mediaTypeTopicsPreview)
-	case searchType == "issues":
+	case "issues":
 		// Accept header for search issues based on reactions preview endpoint
 		// TODO: remove custom Accept header when this API fully launches.
 		acceptHeaders = append(acceptHeaders, mediaTypeReactionsPreview)

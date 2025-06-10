@@ -16,7 +16,7 @@ func TestStringify(t *testing.T) {
 	var nilPointer *string
 
 	var tests = []struct {
-		in  interface{}
+		in  any
 		out string
 	}{
 		// basic types
@@ -89,7 +89,7 @@ func TestStringify(t *testing.T) {
 func TestString(t *testing.T) {
 	t.Parallel()
 	var tests = []struct {
-		in  interface{}
+		in  any
 		out string
 	}{
 		{CodeResult{Name: Ptr("n")}, `github.CodeResult{Name:"n"}`},
@@ -107,6 +107,7 @@ func TestString(t *testing.T) {
 		{Hook{ID: Ptr(int64(1))}, `github.Hook{ID:1}`},
 		{IssueComment{ID: Ptr(int64(1))}, `github.IssueComment{ID:1}`},
 		{Issue{Number: Ptr(1)}, `github.Issue{Number:1}`},
+		{SubIssue{ID: Ptr(int64(1))}, `github.SubIssue{ID:1}`},
 		{Key{ID: Ptr(int64(1))}, `github.Key{ID:1}`},
 		{Label{ID: Ptr(int64(1)), Name: Ptr("l")}, `github.Label{ID:1, Name:"l"}`},
 		{Organization{ID: Ptr(int64(1))}, `github.Organization{ID:1}`},

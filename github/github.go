@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	Version = "v71.0.0"
+	Version = "v72.0.0"
 
 	defaultAPIVersion = "2022-11-28"
 	defaultBaseURL    = "https://api.github.com/"
@@ -54,6 +54,7 @@ const (
 	mediaTypeV3Patch           = "application/vnd.github.v3.patch"
 	mediaTypeOrgPermissionRepo = "application/vnd.github.v3.repository+json"
 	mediaTypeIssueImportAPI    = "application/vnd.github.golden-comet-preview+json"
+	mediaTypeStarring          = "application/vnd.github.star+json"
 
 	// Media Type values to access preview APIs
 	// These media types will be added to the API request as headers
@@ -71,9 +72,6 @@ const (
 	// on GitHub Cloud version.
 	//
 	// See https://github.com/google/go-github/pull/2125 for full context.
-
-	// https://developer.github.com/changes/2014-12-09-new-attributes-for-stars-api/
-	mediaTypeStarringPreview = "application/vnd.github.v3.star+json"
 
 	// https://help.github.com/enterprise/2.4/admin/guides/migrations/exporting-the-github-com-organization-s-repositories/
 	mediaTypeMigrationsPreview = "application/vnd.github.wyandotte-preview+json"
@@ -222,6 +220,7 @@ type Client struct {
 	Search             *SearchService
 	SecretScanning     *SecretScanningService
 	SecurityAdvisories *SecurityAdvisoriesService
+	SubIssue           *SubIssueService
 	Teams              *TeamsService
 	Users              *UsersService
 }
@@ -302,7 +301,7 @@ type RawOptions struct {
 
 // addOptions adds the parameters in opts as URL query parameters to s. opts
 // must be a struct whose fields may contain "url" tags.
-func addOptions(s string, opts interface{}) (string, error) {
+func addOptions(s string, opts any) (string, error) {
 	v := reflect.ValueOf(opts)
 	if v.Kind() == reflect.Ptr && v.IsNil() {
 		return s, nil
@@ -458,6 +457,7 @@ func (c *Client) initialize() {
 	c.Search = (*SearchService)(&c.common)
 	c.SecretScanning = (*SecretScanningService)(&c.common)
 	c.SecurityAdvisories = (*SecurityAdvisoriesService)(&c.common)
+	c.SubIssue = (*SubIssueService)(&c.common)
 	c.Teams = (*TeamsService)(&c.common)
 	c.Users = (*UsersService)(&c.common)
 }
@@ -524,7 +524,7 @@ func WithVersion(version string) RequestOption {
 // Relative URLs should always be specified without a preceding slash. If
 // specified, the value pointed to by body is JSON encoded and included as the
 // request body.
-func (c *Client) NewRequest(method, urlStr string, body interface{}, opts ...RequestOption) (*http.Request, error) {
+func (c *Client) NewRequest(method, urlStr string, body any, opts ...RequestOption) (*http.Request, error) {
 	if !strings.HasSuffix(c.BaseURL.Path, "/") {
 		return nil, fmt.Errorf("baseURL must have a trailing slash, but %q does not", c.BaseURL)
 	}
@@ -1021,7 +1021,7 @@ func (c *Client) bareDoUntilFound(ctx context.Context, req *http.Request, maxRed
 //
 // The provided ctx must be non-nil, if it is nil an error is returned. If it
 // is canceled or times out, ctx.Err() will be returned.
-func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*Response, error) {
+func (c *Client) Do(ctx context.Context, req *http.Request, v any) (*Response, error) {
 	resp, err := c.BareDo(ctx, req)
 	if err != nil {
 		return resp, err
@@ -1391,12 +1391,12 @@ func (e *Error) UnmarshalJSON(data []byte) error {
 // present. A response is considered an error if it has a status code outside
 // the 200 range or equal to 202 Accepted.
 // API error responses are expected to have response
-// body, and a JSON response body that maps to ErrorResponse.
+// body, and a JSON response body that maps to [ErrorResponse].
 //
-// The error type will be *RateLimitError for rate limit exceeded errors,
-// *AcceptedError for 202 Accepted status codes,
-// *TwoFactorAuthError for two-factor authentication errors,
-// and *RedirectionError for redirect status codes (only happens when ignoring redirections).
+// The error type will be *[RateLimitError] for rate limit exceeded errors,
+// *[AcceptedError] for 202 Accepted status codes,
+// *[TwoFactorAuthError] for two-factor authentication errors,
+// and *[RedirectionError] for redirect status codes (only happens when ignoring redirections).
 func CheckResponse(r *http.Response) error {
 	if r.StatusCode == http.StatusAccepted {
 		return &AcceptedError{}
