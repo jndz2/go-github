@@ -58,6 +58,7 @@ type treeEntryWithFileDelete struct {
 	URL     *string `json:"url,omitempty"`
 }
 
+// MarshalJSON implements the json.Marshaler interface.
 func (t *TreeEntry) MarshalJSON() ([]byte, error) {
 	if t.SHA == nil && t.Content == nil {
 		return json.Marshal(struct {
@@ -96,7 +97,7 @@ func (t *TreeEntry) MarshalJSON() ([]byte, error) {
 // GitHub API docs: https://docs.github.com/rest/git/trees#get-a-tree
 //
 //meta:operation GET /repos/{owner}/{repo}/git/trees/{tree_sha}
-func (s *GitService) GetTree(ctx context.Context, owner string, repo string, sha string, recursive bool) (*Tree, *Response, error) {
+func (s *GitService) GetTree(ctx context.Context, owner, repo, sha string, recursive bool) (*Tree, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/git/trees/%v", owner, repo, sha)
 	if recursive {
 		u += "?recursive=1"
@@ -129,7 +130,7 @@ type createTree struct {
 // GitHub API docs: https://docs.github.com/rest/git/trees#create-a-tree
 //
 //meta:operation POST /repos/{owner}/{repo}/git/trees
-func (s *GitService) CreateTree(ctx context.Context, owner string, repo string, baseTree string, entries []*TreeEntry) (*Tree, *Response, error) {
+func (s *GitService) CreateTree(ctx context.Context, owner, repo, baseTree string, entries []*TreeEntry) (*Tree, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/git/trees", owner, repo)
 
 	newEntries := make([]any, 0, len(entries))

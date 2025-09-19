@@ -43,7 +43,7 @@ type AuditEntry struct {
 	HashedToken              *string        `json:"hashed_token,omitempty"`
 	Org                      *string        `json:"org,omitempty"`
 	OrgID                    *int64         `json:"org_id,omitempty"`
-	Timestamp                *Timestamp     `json:"@timestamp,omitempty"` // The time the audit log event occurred, given as a [Unix timestamp](http://en.wikipedia.org/wiki/Unix_time).
+	Timestamp                *Timestamp     `json:"@timestamp,omitempty"` // The time the audit log event occurred, given as a [Unix timestamp](https://en.wikipedia.org/wiki/Unix_time).
 	TokenID                  *int64         `json:"token_id,omitempty"`
 	TokenScopes              *string        `json:"token_scopes,omitempty"`
 	User                     *string        `json:"user,omitempty"` // The user that was affected by the action performed (if available).
@@ -56,6 +56,7 @@ type AuditEntry struct {
 	AdditionalFields map[string]any `json:"-"`
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface.
 func (a *AuditEntry) UnmarshalJSON(data []byte) error {
 	type entryAlias AuditEntry
 	var v entryAlias
@@ -89,6 +90,7 @@ func (a *AuditEntry) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalJSON implements the json.Marshaler interface.
 func (a *AuditEntry) MarshalJSON() ([]byte, error) {
 	type entryAlias AuditEntry
 	v := entryAlias(*a)

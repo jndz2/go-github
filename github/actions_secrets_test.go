@@ -81,7 +81,7 @@ func TestPublicKey_UnmarshalJSON(t *testing.T) {
 			pk := PublicKey{}
 			err := json.Unmarshal(tt.data, &pk)
 			if err == nil && tt.wantErr {
-				t.Errorf("PublicKey.UnmarshalJSON returned nil instead of an error")
+				t.Error("PublicKey.UnmarshalJSON returned nil instead of an error")
 			}
 			if err != nil && !tt.wantErr {
 				t.Errorf("PublicKey.UnmarshalJSON returned an unexpected error: %+v", err)
@@ -312,6 +312,10 @@ func TestActionsService_CreateOrUpdateRepoSecret(t *testing.T) {
 
 	const methodName = "CreateOrUpdateRepoSecret"
 	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Actions.CreateOrUpdateRepoSecret(ctx, "o", "r", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Actions.CreateOrUpdateRepoSecret(ctx, "\n", "\n", input)
 		return err
 	})
@@ -325,7 +329,7 @@ func TestActionsService_DeleteRepoSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/actions/secrets/NAME", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/actions/secrets/NAME", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -492,6 +496,10 @@ func TestActionsService_CreateOrUpdateOrgSecret(t *testing.T) {
 
 	const methodName = "CreateOrUpdateOrgSecret"
 	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Actions.CreateOrUpdateOrgSecret(ctx, "o", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Actions.CreateOrUpdateOrgSecret(ctx, "\n", input)
 		return err
 	})
@@ -507,7 +515,7 @@ func TestActionsService_ListSelectedReposForOrgSecret(t *testing.T) {
 
 	mux.HandleFunc("/orgs/o/actions/secrets/NAME/repositories", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		fmt.Fprintf(w, `{"total_count":1,"repositories":[{"id":1}]}`)
+		fmt.Fprint(w, `{"total_count":1,"repositories":[{"id":1}]}`)
 	})
 
 	opts := &ListOptions{Page: 2, PerPage: 2}
@@ -546,7 +554,7 @@ func TestActionsService_SetSelectedReposForOrgSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/actions/secrets/NAME/repositories", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/actions/secrets/NAME/repositories", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 		testHeader(t, r, "Content-Type", "application/json")
 		testBody(t, r, `{"selected_repository_ids":[64780797]}`+"\n")
@@ -573,7 +581,7 @@ func TestActionsService_AddSelectedRepoToOrgSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/actions/secrets/NAME/repositories/1234", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/actions/secrets/NAME/repositories/1234", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 	})
 
@@ -585,6 +593,10 @@ func TestActionsService_AddSelectedRepoToOrgSecret(t *testing.T) {
 	}
 
 	const methodName = "AddSelectedRepoToOrgSecret"
+	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Actions.AddSelectedRepoToOrgSecret(ctx, "o", "NAME", nil)
+		return err
+	})
 	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Actions.AddSelectedRepoToOrgSecret(ctx, "\n", "\n", repo)
 		return err
@@ -599,7 +611,7 @@ func TestActionsService_RemoveSelectedRepoFromOrgSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/actions/secrets/NAME/repositories/1234", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/actions/secrets/NAME/repositories/1234", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -611,6 +623,10 @@ func TestActionsService_RemoveSelectedRepoFromOrgSecret(t *testing.T) {
 	}
 
 	const methodName = "RemoveSelectedRepoFromOrgSecret"
+	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Actions.RemoveSelectedRepoFromOrgSecret(ctx, "o", "NAME", nil)
+		return err
+	})
 	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Actions.RemoveSelectedRepoFromOrgSecret(ctx, "\n", "\n", repo)
 		return err
@@ -625,7 +641,7 @@ func TestActionsService_DeleteOrgSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/actions/secrets/NAME", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/actions/secrets/NAME", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -822,6 +838,10 @@ func TestActionsService_CreateOrUpdateEnvSecret(t *testing.T) {
 
 	const methodName = "CreateOrUpdateEnvSecret"
 	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Actions.CreateOrUpdateEnvSecret(ctx, 1, "e", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Actions.CreateOrUpdateEnvSecret(ctx, 0.0, "\n", input)
 		return err
 	})
@@ -835,7 +855,7 @@ func TestActionsService_DeleteEnvSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repositories/1/environments/e/secrets/secret", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repositories/1/environments/e/secrets/secret", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 

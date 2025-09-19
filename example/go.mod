@@ -1,4 +1,4 @@
-module github.com/google/go-github/v72/example
+module github.com/google/go-github/v74/example
 
 go 1.23.0
 
@@ -7,7 +7,7 @@ require (
 	github.com/bradleyfalzon/ghinstallation/v2 v2.0.4
 	github.com/gofri/go-github-pagination v1.0.0
 	github.com/gofri/go-github-ratelimit/v2 v2.0.2
-	github.com/google/go-github/v72 v72.0.0
+	github.com/google/go-github/v74 v74.0.0
 	github.com/sigstore/sigstore-go v0.6.1
 	golang.org/x/crypto v0.36.0
 	golang.org/x/term v0.30.0
@@ -17,7 +17,7 @@ require (
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
-	github.com/cloudflare/circl v1.3.7 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20220623050100-57a0ce2678a7 // indirect
 	github.com/digitorus/pkcs7 v0.0.0-20230818184609-3a137a874352 // indirect
 	github.com/digitorus/timestamp v0.0.0-20231217203849-220c5c2851b7 // indirect
@@ -100,4 +100,4 @@ require (
 )
 
 // Use version at HEAD, not the latest published.
-replace github.com/google/go-github/v72 => ../
+replace github.com/google/go-github/v74 => ../

@@ -65,7 +65,7 @@ func TestIssuesService_IsAssignee_true(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/assignees/u", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/assignees/u", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 	})
 
@@ -138,7 +138,7 @@ func TestIssuesService_IsAssignee_error(t *testing.T) {
 	ctx := context.Background()
 	assignee, _, err := client.Issues.IsAssignee(ctx, "o", "r", "u")
 	if err == nil {
-		t.Errorf("Expected HTTP 400 response")
+		t.Error("Expected HTTP 400 response")
 	}
 	if want := false; assignee != want {
 		t.Errorf("Issues.IsAssignee returned %+v, want %+v", assignee, want)

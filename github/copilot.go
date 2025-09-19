@@ -185,6 +185,7 @@ type CopilotMetrics struct {
 	CopilotDotcomPullRequests *CopilotDotcomPullRequests `json:"copilot_dotcom_pull_requests,omitempty"`
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface.
 func (cp *CopilotSeatDetails) UnmarshalJSON(data []byte) error {
 	// Using an alias to avoid infinite recursion when calling json.Unmarshal
 	type alias CopilotSeatDetails
@@ -203,6 +204,11 @@ func (cp *CopilotSeatDetails) UnmarshalJSON(data []byte) error {
 	cp.PlanType = seatDetail.PlanType
 
 	switch v := seatDetail.Assignee.(type) {
+	case nil:
+		// Assignee can be null according to GitHub API specification.
+		// See: https://docs.github.com/en/rest/copilot/copilot-user-management?apiVersion=2022-11-28#list-all-copilot-seat-assignments-for-an-organization
+		// Note: Copilot API is in public preview and subject to change.
+		cp.Assignee = nil
 	case map[string]any:
 		jsonData, err := json.Marshal(seatDetail.Assignee)
 		if err != nil {

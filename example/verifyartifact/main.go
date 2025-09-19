@@ -18,7 +18,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/google/go-github/v72/github"
+	"github.com/google/go-github/v74/github"
 	"github.com/sigstore/sigstore-go/pkg/bundle"
 	"github.com/sigstore/sigstore-go/pkg/root"
 	"github.com/sigstore/sigstore-go/pkg/verify"
@@ -186,7 +186,7 @@ func runVerification(sev *verify.SignedEntityVerifier, pb *verify.PolicyBuilder,
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "Verification successful!\n")
+	fmt.Fprint(os.Stderr, "Verification successful!\n")
 
 	marshaled, err := json.MarshalIndent(res, "", "  ")
 	if err != nil {

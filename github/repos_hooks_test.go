@@ -47,6 +47,10 @@ func TestRepositoriesService_CreateHook(t *testing.T) {
 
 	const methodName = "CreateHook"
 	testBadOptions(t, methodName, func() (err error) {
+		_, _, err = client.Repositories.CreateHook(ctx, "o", "r", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, _, err = client.Repositories.CreateHook(ctx, "\n", "\n", input)
 		return err
 	})
@@ -218,7 +222,7 @@ func TestRepositoriesService_DeleteHook(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/hooks/1", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/hooks/1", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -252,7 +256,7 @@ func TestRepositoriesService_PingHook(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/hooks/1/pings", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/hooks/1/pings", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
 	})
 
@@ -277,7 +281,7 @@ func TestRepositoriesService_TestHook(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/hooks/1/tests", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/hooks/1/tests", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "POST")
 	})
 
@@ -570,13 +574,13 @@ func TestRepositoriesService_Subscribe(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/hub", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/hub", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		testFormValues(t, r, values{
 			"hub.mode":     "subscribe",
 			"hub.topic":    "https://github.com/o/r/events/push",
-			"hub.callback": "http://postbin.org/123",
+			"hub.callback": "http://localhost:8080/callback",
 			"hub.secret":   "test secret",
 		})
 	})
@@ -587,7 +591,7 @@ func TestRepositoriesService_Subscribe(t *testing.T) {
 		"o",
 		"r",
 		"push",
-		"http://postbin.org/123",
+		"http://localhost:8080/callback",
 		[]byte("test secret"),
 	)
 	if err != nil {
@@ -595,7 +599,7 @@ func TestRepositoriesService_Subscribe(t *testing.T) {
 	}
 
 	testNewRequestAndDoFailure(t, "Subscribe", client, func() (*Response, error) {
-		return client.Repositories.Subscribe(ctx, "o", "r", "push", "http://postbin.org/123", nil)
+		return client.Repositories.Subscribe(ctx, "o", "r", "push", "http://localhost:8080", nil)
 	})
 }
 
@@ -603,13 +607,13 @@ func TestRepositoriesService_Unsubscribe(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/hub", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/hub", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, http.MethodPost)
 		testHeader(t, r, "Content-Type", "application/x-www-form-urlencoded")
 		testFormValues(t, r, values{
 			"hub.mode":     "unsubscribe",
 			"hub.topic":    "https://github.com/o/r/events/push",
-			"hub.callback": "http://postbin.org/123",
+			"hub.callback": "http://localhost:8080/callback",
 			"hub.secret":   "test secret",
 		})
 	})
@@ -620,7 +624,7 @@ func TestRepositoriesService_Unsubscribe(t *testing.T) {
 		"o",
 		"r",
 		"push",
-		"http://postbin.org/123",
+		"http://localhost:8080/callback",
 		[]byte("test secret"),
 	)
 	if err != nil {
@@ -628,6 +632,6 @@ func TestRepositoriesService_Unsubscribe(t *testing.T) {
 	}
 
 	testNewRequestAndDoFailure(t, "Unsubscribe", client, func() (*Response, error) {
-		return client.Repositories.Unsubscribe(ctx, "o", "r", "push", "http://postbin.org/123", nil)
+		return client.Repositories.Unsubscribe(ctx, "o", "r", "push", "http://localhost:8080/callback", nil)
 	})
 }

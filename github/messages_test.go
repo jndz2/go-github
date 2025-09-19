@@ -199,7 +199,7 @@ func TestValidatePayload_NoSecretKey(t *testing.T) {
 // badReader satisfies io.Reader but always returns an error.
 type badReader struct{}
 
-func (b *badReader) Read(p []byte) (int, error) {
+func (b *badReader) Read([]byte) (int, error) {
 	return 0, errors.New("bad reader")
 }
 
@@ -589,14 +589,14 @@ func TestParseWebHook_BadMessageType(t *testing.T) {
 func TestValidatePayloadFromBody_UnableToParseBody(t *testing.T) {
 	t.Parallel()
 	if _, err := ValidatePayloadFromBody("application/x-www-form-urlencoded", bytes.NewReader([]byte(`%`)), "sha1=", []byte{}); err == nil {
-		t.Errorf("ValidatePayloadFromBody returned nil; wanted error")
+		t.Error("ValidatePayloadFromBody returned nil; wanted error")
 	}
 }
 
 func TestValidatePayloadFromBody_UnsupportedContentType(t *testing.T) {
 	t.Parallel()
 	if _, err := ValidatePayloadFromBody("invalid", bytes.NewReader([]byte(`{}`)), "sha1=", []byte{}); err == nil {
-		t.Errorf("ValidatePayloadFromBody returned nil; wanted error")
+		t.Error("ValidatePayloadFromBody returned nil; wanted error")
 	}
 }
 

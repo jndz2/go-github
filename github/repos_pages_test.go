@@ -58,6 +58,10 @@ func TestRepositoriesService_EnablePagesLegacy(t *testing.T) {
 
 	const methodName = "EnablePages"
 	testBadOptions(t, methodName, func() (err error) {
+		_, _, err = client.Repositories.EnablePages(ctx, "o", "r", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, _, err = client.Repositories.EnablePages(ctx, "\n", "\n", input)
 		return err
 	})
@@ -271,7 +275,7 @@ func TestRepositoriesService_DisablePages(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/pages", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/pages", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 		testHeader(t, r, "Accept", mediaTypeEnablePagesAPIPreview)
 	})

@@ -75,10 +75,10 @@ func TestRequiredReviewer_UnmarshalJSON(t *testing.T) {
 			rule := []*RequiredReviewer{}
 			err := json.Unmarshal(test.data, &rule)
 			if err != nil && !test.wantError {
-				t.Errorf("RequiredReviewer.UnmarshalJSON returned an error when we expected nil")
+				t.Error("RequiredReviewer.UnmarshalJSON returned an error when we expected nil")
 			}
 			if err == nil && test.wantError {
-				t.Errorf("RequiredReviewer.UnmarshalJSON returned no error when we expected one")
+				t.Error("RequiredReviewer.UnmarshalJSON returned no error when we expected one")
 			}
 			if !cmp.Equal(test.wantRule, rule) {
 				t.Errorf("RequiredReviewer.UnmarshalJSON expected rule %+v, got %+v", test.wantRule, rule)
@@ -331,7 +331,7 @@ func TestRepositoriesService_DeleteEnvironment(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/environments/e", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/environments/e", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 

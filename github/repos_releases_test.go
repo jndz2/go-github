@@ -252,6 +252,10 @@ func TestRepositoriesService_CreateRelease(t *testing.T) {
 
 	const methodName = "CreateRelease"
 	testBadOptions(t, methodName, func() (err error) {
+		_, _, err = client.Repositories.CreateRelease(ctx, "o", "r", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, _, err = client.Repositories.CreateRelease(ctx, "\n", "\n", input)
 		return err
 	})
@@ -315,6 +319,10 @@ func TestRepositoriesService_EditRelease(t *testing.T) {
 
 	const methodName = "EditRelease"
 	testBadOptions(t, methodName, func() (err error) {
+		_, _, err = client.Repositories.EditRelease(ctx, "o", "r", 1, nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, _, err = client.Repositories.EditRelease(ctx, "\n", "\n", 1, input)
 		return err
 	})
@@ -332,7 +340,7 @@ func TestRepositoriesService_DeleteRelease(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/releases/1", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/releases/1", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -656,7 +664,7 @@ func TestRepositoriesService_DeleteReleaseAsset(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/releases/assets/1", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/releases/assets/1", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -745,7 +753,7 @@ func TestRepositoriesService_UploadReleaseAsset(t *testing.T) {
 			testFormValues(t, r, test.expectedFormValues)
 			testBody(t, r, "Upload me !\n")
 
-			fmt.Fprintf(w, `{"id":1}`)
+			fmt.Fprint(w, `{"id":1}`)
 		})
 
 		file := openTestFile(t, test.fileName, "Upload me !\n")
@@ -761,6 +769,10 @@ func TestRepositoriesService_UploadReleaseAsset(t *testing.T) {
 		}
 
 		const methodName = "UploadReleaseAsset"
+		testBadOptions(t, methodName, func() (err error) {
+			_, _, err = client.Repositories.UploadReleaseAsset(ctx, "o", "r", int64(key), test.uploadOpts, nil)
+			return err
+		})
 		testBadOptions(t, methodName, func() (err error) {
 			_, _, err = client.Repositories.UploadReleaseAsset(ctx, "\n", "\n", int64(key), test.uploadOpts, file)
 			return err

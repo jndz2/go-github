@@ -13,7 +13,7 @@
 //
 // Note, if you want to push a single file, you probably prefer to use the
 // content API. An example is available here:
-// https://pkg.go.dev/github.com/google/go-github/github#example-RepositoriesService-CreateFile
+// https://pkg.go.dev/github.com/google/go-github/v74/github#example-RepositoriesService-CreateFile
 //
 // Note, for this to work at least 1 commit is needed, so you if you use this
 // after creating a repository you might want to make sure you set `AutoInit` to
@@ -33,7 +33,7 @@ import (
 	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
-	"github.com/google/go-github/v72/github"
+	"github.com/google/go-github/v74/github"
 )
 
 var (
@@ -63,7 +63,7 @@ var ctx = context.Background()
 // getRef returns the commit branch reference object if it exists or creates it
 // from the base branch before returning it.
 func getRef() (ref *github.Reference, err error) {
-	if ref, _, err = client.Git.GetRef(ctx, *sourceOwner, *sourceRepo, "refs/heads/"+*commitBranch); err == nil {
+	if ref, _, err = client.Git.GetRef(ctx, *sourceOwner, *sourceRepo, branchRef(*commitBranch)); err == nil {
 		return ref, nil
 	}
 
@@ -78,12 +78,17 @@ func getRef() (ref *github.Reference, err error) {
 	}
 
 	var baseRef *github.Reference
-	if baseRef, _, err = client.Git.GetRef(ctx, *sourceOwner, *sourceRepo, "refs/heads/"+*baseBranch); err != nil {
+	if baseRef, _, err = client.Git.GetRef(ctx, *sourceOwner, *sourceRepo, branchRef(*baseBranch)); err != nil {
 		return nil, err
 	}
-	newRef := &github.Reference{Ref: github.Ptr("refs/heads/" + *commitBranch), Object: &github.GitObject{SHA: baseRef.Object.SHA}}
+	newRef := github.CreateRef{Ref: branchRef(*commitBranch), SHA: *baseRef.Object.SHA}
 	ref, _, err = client.Git.CreateRef(ctx, *sourceOwner, *sourceRepo, newRef)
 	return ref, err
+}
+
+// branchRef generates the fully qualified git reference for the given branch name.
+func branchRef(name string) string {
+	return "refs/heads/" + name
 }
 
 // getTree generates the tree to commit based on the given files and the commit
@@ -138,7 +143,7 @@ func pushCommit(ref *github.Reference, tree *github.Tree) (err error) {
 	// Create the commit using the tree.
 	date := time.Now()
 	author := &github.CommitAuthor{Date: &github.Timestamp{Time: date}, Name: authorName, Email: authorEmail}
-	commit := &github.Commit{Author: author, Message: commitMessage, Tree: tree, Parents: []*github.Commit{parent.Commit}}
+	commit := github.Commit{Author: author, Message: commitMessage, Tree: tree, Parents: []*github.Commit{parent.Commit}}
 	opts := github.CreateCommitOptions{}
 	if *privateKey != "" {
 		armoredBlock, e := os.ReadFile(*privateKey)
@@ -164,11 +169,14 @@ func pushCommit(ref *github.Reference, tree *github.Tree) (err error) {
 
 	// Attach the commit to the master branch.
 	ref.Object.SHA = newCommit.SHA
-	_, _, err = client.Git.UpdateRef(ctx, *sourceOwner, *sourceRepo, ref, false)
+	_, _, err = client.Git.UpdateRef(ctx, *sourceOwner, *sourceRepo, *ref.Ref, github.UpdateRef{
+		SHA:   *newCommit.SHA,
+		Force: github.Ptr(false),
+	})
 	return err
 }
 
-// createPR creates a pull request. Based on: https://pkg.go.dev/github.com/google/go-github/github#example-PullRequestsService-Create
+// createPR creates a pull request. Based on: https://pkg.go.dev/github.com/google/go-github/v74/github#example-PullRequestsService-Create
 func createPR() (err error) {
 	if *prSubject == "" {
 		return errors.New("missing `-pr-title` flag; skipping PR creation")
@@ -218,7 +226,7 @@ func main() {
 		log.Fatalf("Unable to get/create the commit reference: %s\n", err)
 	}
 	if ref == nil {
-		log.Fatalf("No error where returned but the reference is nil")
+		log.Fatal("No error where returned but the reference is nil")
 	}
 
 	tree, err := getTree(ref)

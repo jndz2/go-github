@@ -26,7 +26,7 @@ func TestTeamsService_ListDiscussionsByID(t *testing.T) {
 			"direction": "desc",
 			"page":      "2",
 		})
-		fmt.Fprintf(w,
+		fmt.Fprint(w,
 			`[
 				{
 					"author": {
@@ -141,7 +141,7 @@ func TestTeamsService_ListDiscussionsBySlug(t *testing.T) {
 			"direction": "desc",
 			"page":      "2",
 		})
-		fmt.Fprintf(w,
+		fmt.Fprint(w,
 			`[
 				{
 					"author": {
@@ -496,7 +496,7 @@ func TestTeamsService_DeleteDiscussionByID(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/organizations/1/team/2/discussions/3", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/organizations/1/team/2/discussions/3", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -521,7 +521,7 @@ func TestTeamsService_DeleteDiscussionBySlug(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/teams/s/discussions/3", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/teams/s/discussions/3", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 

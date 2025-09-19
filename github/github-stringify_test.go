@@ -96,6 +96,18 @@ func TestAdvancedSecurity_String(t *testing.T) {
 	}
 }
 
+func TestArtifactPeriod_String(t *testing.T) {
+	t.Parallel()
+	v := ArtifactPeriod{
+		Days:               Ptr(0),
+		MaximumAllowedDays: Ptr(0),
+	}
+	want := `github.ArtifactPeriod{Days:0, MaximumAllowedDays:0}`
+	if got := v.String(); got != want {
+		t.Errorf("ArtifactPeriod.String = %v, want %v", got, want)
+	}
+}
+
 func TestAuthorization_String(t *testing.T) {
 	t.Parallel()
 	v := Authorization{
@@ -213,6 +225,50 @@ func TestCheckSuite_String(t *testing.T) {
 	want := `github.CheckSuite{ID:0, NodeID:"", HeadBranch:"", HeadSHA:"", URL:"", BeforeSHA:"", AfterSHA:"", Status:"", Conclusion:"", CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, UpdatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, App:github.App{}, Repository:github.Repository{}, HeadCommit:github.Commit{}, LatestCheckRunsCount:0, Rerequestable:false, RunsRerequestable:false}`
 	if got := v.String(); got != want {
 		t.Errorf("CheckSuite.String = %v, want %v", got, want)
+	}
+}
+
+func TestClassroom_String(t *testing.T) {
+	t.Parallel()
+	v := Classroom{
+		ID:           Ptr(int64(0)),
+		Name:         Ptr(""),
+		Archived:     Ptr(false),
+		Organization: &Organization{},
+		URL:          Ptr(""),
+	}
+	want := `github.Classroom{ID:0, Name:"", Archived:false, Organization:github.Organization{}, URL:""}`
+	if got := v.String(); got != want {
+		t.Errorf("Classroom.String = %v, want %v", got, want)
+	}
+}
+
+func TestClassroomAssignment_String(t *testing.T) {
+	t.Parallel()
+	v := ClassroomAssignment{
+		ID:                          Ptr(int64(0)),
+		PublicRepo:                  Ptr(false),
+		Title:                       Ptr(""),
+		Type:                        Ptr(""),
+		InviteLink:                  Ptr(""),
+		InvitationsEnabled:          Ptr(false),
+		Slug:                        Ptr(""),
+		StudentsAreRepoAdmins:       Ptr(false),
+		FeedbackPullRequestsEnabled: Ptr(false),
+		MaxTeams:                    Ptr(0),
+		MaxMembers:                  Ptr(0),
+		Editor:                      Ptr(""),
+		Accepted:                    Ptr(0),
+		Submitted:                   Ptr(0),
+		Passing:                     Ptr(0),
+		Language:                    Ptr(""),
+		Deadline:                    &Timestamp{},
+		StarterCodeRepository:       &Repository{},
+		Classroom:                   &Classroom{},
+	}
+	want := `github.ClassroomAssignment{ID:0, PublicRepo:false, Title:"", Type:"", InviteLink:"", InvitationsEnabled:false, Slug:"", StudentsAreRepoAdmins:false, FeedbackPullRequestsEnabled:false, MaxTeams:0, MaxMembers:0, Editor:"", Accepted:0, Submitted:0, Passing:0, Language:"", Deadline:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, StarterCodeRepository:github.Repository{}, Classroom:github.Classroom{}}`
+	if got := v.String(); got != want {
+		t.Errorf("ClassroomAssignment.String = %v, want %v", got, want)
 	}
 }
 
@@ -1115,6 +1171,15 @@ func TestOrganization_String(t *testing.T) {
 		SecretScanningEnabledForNewRepos:               Ptr(false),
 		SecretScanningPushProtectionEnabledForNewRepos: Ptr(false),
 		SecretScanningValidityChecksEnabled:            Ptr(false),
+		MembersCanDeleteRepositories:                   Ptr(false),
+		MembersCanChangeRepoVisibility:                 Ptr(false),
+		MembersCanInviteOutsideCollaborators:           Ptr(false),
+		MembersCanDeleteIssues:                         Ptr(false),
+		DisplayCommenterFullNameSettingEnabled:         Ptr(false),
+		ReadersCanCreateDiscussions:                    Ptr(false),
+		MembersCanCreateTeams:                          Ptr(false),
+		MembersCanViewDependencyInsights:               Ptr(false),
+		DefaultRepositoryBranch:                        Ptr(""),
 		URL:                                            Ptr(""),
 		EventsURL:                                      Ptr(""),
 		HooksURL:                                       Ptr(""),
@@ -1123,7 +1188,7 @@ func TestOrganization_String(t *testing.T) {
 		PublicMembersURL:                               Ptr(""),
 		ReposURL:                                       Ptr(""),
 	}
-	want := `github.Organization{Login:"", ID:0, NodeID:"", AvatarURL:"", HTMLURL:"", Name:"", Company:"", Blog:"", Location:"", Email:"", TwitterUsername:"", Description:"", PublicRepos:0, PublicGists:0, Followers:0, Following:0, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, UpdatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, TotalPrivateRepos:0, OwnedPrivateRepos:0, PrivateGists:0, DiskUsage:0, Collaborators:0, BillingEmail:"", Type:"", Plan:github.Plan{}, TwoFactorRequirementEnabled:false, IsVerified:false, HasOrganizationProjects:false, HasRepositoryProjects:false, DefaultRepoPermission:"", DefaultRepoSettings:"", MembersCanCreateRepos:false, MembersCanCreatePublicRepos:false, MembersCanCreatePrivateRepos:false, MembersCanCreateInternalRepos:false, MembersCanForkPrivateRepos:false, MembersAllowedRepositoryCreationType:"", MembersCanCreatePages:false, MembersCanCreatePublicPages:false, MembersCanCreatePrivatePages:false, WebCommitSignoffRequired:false, AdvancedSecurityEnabledForNewRepos:false, DependabotAlertsEnabledForNewRepos:false, DependabotSecurityUpdatesEnabledForNewRepos:false, DependencyGraphEnabledForNewRepos:false, SecretScanningEnabledForNewRepos:false, SecretScanningPushProtectionEnabledForNewRepos:false, SecretScanningValidityChecksEnabled:false, URL:"", EventsURL:"", HooksURL:"", IssuesURL:"", MembersURL:"", PublicMembersURL:"", ReposURL:""}`
+	want := `github.Organization{Login:"", ID:0, NodeID:"", AvatarURL:"", HTMLURL:"", Name:"", Company:"", Blog:"", Location:"", Email:"", TwitterUsername:"", Description:"", PublicRepos:0, PublicGists:0, Followers:0, Following:0, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, UpdatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, TotalPrivateRepos:0, OwnedPrivateRepos:0, PrivateGists:0, DiskUsage:0, Collaborators:0, BillingEmail:"", Type:"", Plan:github.Plan{}, TwoFactorRequirementEnabled:false, IsVerified:false, HasOrganizationProjects:false, HasRepositoryProjects:false, DefaultRepoPermission:"", DefaultRepoSettings:"", MembersCanCreateRepos:false, MembersCanCreatePublicRepos:false, MembersCanCreatePrivateRepos:false, MembersCanCreateInternalRepos:false, MembersCanForkPrivateRepos:false, MembersAllowedRepositoryCreationType:"", MembersCanCreatePages:false, MembersCanCreatePublicPages:false, MembersCanCreatePrivatePages:false, WebCommitSignoffRequired:false, AdvancedSecurityEnabledForNewRepos:false, DependabotAlertsEnabledForNewRepos:false, DependabotSecurityUpdatesEnabledForNewRepos:false, DependencyGraphEnabledForNewRepos:false, SecretScanningEnabledForNewRepos:false, SecretScanningPushProtectionEnabledForNewRepos:false, SecretScanningValidityChecksEnabled:false, MembersCanDeleteRepositories:false, MembersCanChangeRepoVisibility:false, MembersCanInviteOutsideCollaborators:false, MembersCanDeleteIssues:false, DisplayCommenterFullNameSettingEnabled:false, ReadersCanCreateDiscussions:false, MembersCanCreateTeams:false, MembersCanViewDependencyInsights:false, DefaultRepositoryBranch:"", URL:"", EventsURL:"", HooksURL:"", IssuesURL:"", MembersURL:"", PublicMembersURL:"", ReposURL:""}`
 	if got := v.String(); got != want {
 		t.Errorf("Organization.String = %v, want %v", got, want)
 	}
@@ -1661,8 +1726,9 @@ func TestReleaseAsset_String(t *testing.T) {
 		BrowserDownloadURL: Ptr(""),
 		Uploader:           &User{},
 		NodeID:             Ptr(""),
+		Digest:             Ptr(""),
 	}
-	want := `github.ReleaseAsset{ID:0, URL:"", Name:"", Label:"", State:"", ContentType:"", Size:0, DownloadCount:0, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, UpdatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, BrowserDownloadURL:"", Uploader:github.User{}, NodeID:""}`
+	want := `github.ReleaseAsset{ID:0, URL:"", Name:"", Label:"", State:"", ContentType:"", Size:0, DownloadCount:0, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, UpdatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, BrowserDownloadURL:"", Uploader:github.User{}, NodeID:"", Digest:""}`
 	if got := v.String(); got != want {
 		t.Errorf("ReleaseAsset.String = %v, want %v", got, want)
 	}
@@ -2017,6 +2083,29 @@ func TestSecurityAndAnalysis_String(t *testing.T) {
 	want := `github.SecurityAndAnalysis{AdvancedSecurity:github.AdvancedSecurity{}, SecretScanning:github.SecretScanning{}, SecretScanningPushProtection:github.SecretScanningPushProtection{}, DependabotSecurityUpdates:github.DependabotSecurityUpdates{}, SecretScanningValidityChecks:github.SecretScanningValidityChecks{}}`
 	if got := v.String(); got != want {
 		t.Errorf("SecurityAndAnalysis.String = %v, want %v", got, want)
+	}
+}
+
+func TestSelfHostRunnerPermissionsEnterprise_String(t *testing.T) {
+	t.Parallel()
+	v := SelfHostRunnerPermissionsEnterprise{
+		DisableSelfHostedRunnersForAllOrgs: Ptr(false),
+	}
+	want := `github.SelfHostRunnerPermissionsEnterprise{DisableSelfHostedRunnersForAllOrgs:false}`
+	if got := v.String(); got != want {
+		t.Errorf("SelfHostRunnerPermissionsEnterprise.String = %v, want %v", got, want)
+	}
+}
+
+func TestSelfHostedRunnersSettingsOrganization_String(t *testing.T) {
+	t.Parallel()
+	v := SelfHostedRunnersSettingsOrganization{
+		EnabledRepositories:     Ptr(""),
+		SelectedRepositoriesURL: Ptr(""),
+	}
+	want := `github.SelfHostedRunnersSettingsOrganization{EnabledRepositories:"", SelectedRepositoriesURL:""}`
+	if got := v.String(); got != want {
+		t.Errorf("SelfHostedRunnersSettingsOrganization.String = %v, want %v", got, want)
 	}
 }
 

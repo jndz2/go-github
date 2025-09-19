@@ -287,7 +287,7 @@ func TestUsersService_IsFollowing_error(t *testing.T) {
 	ctx := context.Background()
 	following, _, err := client.Users.IsFollowing(ctx, "u", "t")
 	if err == nil {
-		t.Errorf("Expected HTTP 400 response")
+		t.Error("Expected HTTP 400 response")
 	}
 	if want := false; following != want {
 		t.Errorf("Users.IsFollowing returned %+v, want %+v", following, want)
@@ -321,7 +321,7 @@ func TestUsersService_Follow(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/user/following/u", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/user/following/u", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 	})
 
@@ -355,7 +355,7 @@ func TestUsersService_Unfollow(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/user/following/u", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/user/following/u", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 

@@ -5,7 +5,7 @@
 
 set -e
 
-GOLANGCI_LINT_VERSION="2.1.6"
+GOLANGCI_LINT_VERSION="2.3.0"
 
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 BIN="$(pwd -P)"/bin
@@ -32,7 +32,7 @@ for dir in $MOD_DIRS; do
   echo linting "$dir"
   (
     cd "$dir"
-    "$BIN"/custom-gcl run --path-prefix "$dir"
+    "$BIN"/custom-gcl run
   ) || fail "failed linting $dir"
 done
 

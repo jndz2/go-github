@@ -29,6 +29,8 @@ linters:
       enabled-checks:
         - commentedOutCode
         - commentFormatting
+        - deprecatedComment
+        - paramTypeCombine
     goheader:
       values:
         regexp:
@@ -83,6 +85,11 @@ linters:
         - name: error-return
         - name: error-strings
         - name: errorf
+        - name: exported
+          arguments:
+            - disableChecksOnConstants
+            - disableChecksOnVariables
+            - disableStutteringCheck
         - name: filename-format
           arguments:
             - ^[_a-z][_a-z0-9]*.go$
@@ -97,7 +104,9 @@ linters:
         - name: time-naming
         - name: unexported-naming
         - name: unexported-return
+        - name: unnecessary-format
         - name: unreachable-code
+        - name: unused-parameter
         - name: use-any
         - name: var-declaration
         - name: var-naming

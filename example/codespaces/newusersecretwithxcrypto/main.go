@@ -38,7 +38,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/google/go-github/v72/github"
+	"github.com/google/go-github/v74/github"
 	"golang.org/x/crypto/nacl/box"
 )
 
@@ -147,7 +147,7 @@ func addUserSecret(ctx context.Context, client *github.Client, secretName, secre
 	return nil
 }
 
-func encryptSecretWithPublicKey(publicKey *github.PublicKey, secretName string, secretValue string) (*github.EncryptedSecret, error) {
+func encryptSecretWithPublicKey(publicKey *github.PublicKey, secretName, secretValue string) (*github.EncryptedSecret, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey.GetKey())
 	if err != nil {
 		return nil, fmt.Errorf("base64.StdEncoding.DecodeString was unable to decode public key: %v", err)

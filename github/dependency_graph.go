@@ -10,6 +10,10 @@ import (
 	"fmt"
 )
 
+// DependencyGraphService handles communication with the dependency graph
+// related methods of the GitHub API.
+//
+// GitHub API docs: https://docs.github.com/rest/dependency-graph
 type DependencyGraphService service
 
 // SBOM represents a software bill of materials, which describes the
@@ -66,7 +70,7 @@ type SBOMRelationship struct {
 	// Example: "SPDXRef-github-interlynk-io-sbomqs-main-f43c98"
 	SPDXElementID string `json:"spdxElementId"`
 
-	// RelatedSpdxElement is the identifier of the related SPDX element.
+	// RelatedSPDXElement is the identifier of the related SPDX element.
 	// Example: "SPDXRef-golang-github.comspf13-cobra-1.8.1-75c946"
 	RelatedSPDXElement string `json:"relatedSpdxElement"`
 

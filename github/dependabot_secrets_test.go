@@ -191,6 +191,10 @@ func TestDependabotService_CreateOrUpdateRepoSecret(t *testing.T) {
 
 	const methodName = "CreateOrUpdateRepoSecret"
 	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Dependabot.CreateOrUpdateRepoSecret(ctx, "o", "r", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Dependabot.CreateOrUpdateRepoSecret(ctx, "\n", "\n", input)
 		return err
 	})
@@ -204,7 +208,7 @@ func TestDependabotService_DeleteRepoSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/dependabot/secrets/NAME", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/dependabot/secrets/NAME", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -371,6 +375,10 @@ func TestDependabotService_CreateOrUpdateOrgSecret(t *testing.T) {
 
 	const methodName = "CreateOrUpdateOrgSecret"
 	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Dependabot.CreateOrUpdateOrgSecret(ctx, "o", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Dependabot.CreateOrUpdateOrgSecret(ctx, "\n", input)
 		return err
 	})
@@ -386,7 +394,7 @@ func TestDependabotService_ListSelectedReposForOrgSecret(t *testing.T) {
 
 	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME/repositories", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		fmt.Fprintf(w, `{"total_count":1,"repositories":[{"id":1}]}`)
+		fmt.Fprint(w, `{"total_count":1,"repositories":[{"id":1}]}`)
 	})
 
 	opts := &ListOptions{Page: 2, PerPage: 2}
@@ -425,7 +433,7 @@ func TestDependabotService_SetSelectedReposForOrgSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME/repositories", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME/repositories", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 		testHeader(t, r, "Content-Type", "application/json")
 		testBody(t, r, `{"selected_repository_ids":[64780797]}`+"\n")
@@ -452,7 +460,7 @@ func TestDependabotService_AddSelectedRepoToOrgSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME/repositories/1234", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME/repositories/1234", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 	})
 
@@ -464,6 +472,14 @@ func TestDependabotService_AddSelectedRepoToOrgSecret(t *testing.T) {
 	}
 
 	const methodName = "AddSelectedRepoToOrgSecret"
+	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Dependabot.AddSelectedRepoToOrgSecret(ctx, "o", "NAME", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Dependabot.AddSelectedRepoToOrgSecret(ctx, "o", "NAME", &Repository{ID: nil})
+		return err
+	})
 	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Dependabot.AddSelectedRepoToOrgSecret(ctx, "\n", "\n", repo)
 		return err
@@ -478,7 +494,7 @@ func TestDependabotService_RemoveSelectedRepoFromOrgSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME/repositories/1234", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME/repositories/1234", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -490,6 +506,14 @@ func TestDependabotService_RemoveSelectedRepoFromOrgSecret(t *testing.T) {
 	}
 
 	const methodName = "RemoveSelectedRepoFromOrgSecret"
+	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Dependabot.RemoveSelectedRepoFromOrgSecret(ctx, "o", "NAME", nil)
+		return err
+	})
+	testBadOptions(t, methodName, func() (err error) {
+		_, err = client.Dependabot.RemoveSelectedRepoFromOrgSecret(ctx, "o", "NAME", &Repository{ID: nil})
+		return err
+	})
 	testBadOptions(t, methodName, func() (err error) {
 		_, err = client.Dependabot.RemoveSelectedRepoFromOrgSecret(ctx, "\n", "\n", repo)
 		return err
@@ -504,7 +528,7 @@ func TestDependabotService_DeleteOrgSecret(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/dependabot/secrets/NAME", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 

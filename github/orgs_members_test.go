@@ -160,7 +160,7 @@ func TestOrganizationsService_IsMember_error(t *testing.T) {
 	ctx := context.Background()
 	member, _, err := client.Organizations.IsMember(ctx, "o", "u")
 	if err == nil {
-		t.Errorf("Expected HTTP 400 response")
+		t.Error("Expected HTTP 400 response")
 	}
 	if want := false; member != want {
 		t.Errorf("Organizations.IsMember returned %+v, want %+v", member, want)
@@ -243,7 +243,7 @@ func TestOrganizationsService_IsPublicMember_error(t *testing.T) {
 	ctx := context.Background()
 	member, _, err := client.Organizations.IsPublicMember(ctx, "o", "u")
 	if err == nil {
-		t.Errorf("Expected HTTP 400 response")
+		t.Error("Expected HTTP 400 response")
 	}
 	if want := false; member != want {
 		t.Errorf("Organizations.IsPublicMember returned %+v, want %+v", member, want)
@@ -263,7 +263,7 @@ func TestOrganizationsService_RemoveMember(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/members/u", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/members/u", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -323,7 +323,7 @@ func TestOrganizationsService_PublicizeMembership(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/public_members/u", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/public_members/u", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 	})
 
@@ -348,7 +348,7 @@ func TestOrganizationsService_ConcealMembership(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/orgs/o/public_members/u", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/orgs/o/public_members/u", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 

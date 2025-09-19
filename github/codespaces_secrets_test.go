@@ -234,6 +234,9 @@ func TestCodespacesService_CreateOrUpdateSecret(t *testing.T) {
 			call: func(ctx context.Context, client *Client, e *EncryptedSecret) (*Response, error) {
 				return client.Codespaces.CreateOrUpdateUserSecret(ctx, e)
 			},
+			badCall: func(ctx context.Context, client *Client, _ *EncryptedSecret) (*Response, error) {
+				return client.Codespaces.CreateOrUpdateUserSecret(ctx, nil)
+			},
 			methodName: "CreateOrUpdateUserSecret",
 		},
 		{
@@ -319,7 +322,7 @@ func TestCodespacesService_DeleteSecret(t *testing.T) {
 		{
 			name: "User",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/user/codespaces/secrets/NAME", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/user/codespaces/secrets/NAME", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "DELETE")
 				})
 			},
@@ -331,7 +334,7 @@ func TestCodespacesService_DeleteSecret(t *testing.T) {
 		{
 			name: "Org",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "DELETE")
 				})
 			},
@@ -346,7 +349,7 @@ func TestCodespacesService_DeleteSecret(t *testing.T) {
 		{
 			name: "Repo",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/repos/o/r/codespaces/secrets/NAME", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/repos/o/r/codespaces/secrets/NAME", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "DELETE")
 				})
 			},
@@ -497,7 +500,7 @@ func TestCodespacesService_ListSelectedReposForSecret(t *testing.T) {
 			handleFunc: func(mux *http.ServeMux) {
 				mux.HandleFunc("/user/codespaces/secrets/NAME/repositories", func(w http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "GET")
-					fmt.Fprintf(w, `{"total_count":1,"repositories":[{"id":1}]}`)
+					fmt.Fprint(w, `{"total_count":1,"repositories":[{"id":1}]}`)
 				})
 			},
 			call: func(ctx context.Context, client *Client) (*SelectedReposList, *Response, error) {
@@ -510,7 +513,7 @@ func TestCodespacesService_ListSelectedReposForSecret(t *testing.T) {
 			handleFunc: func(mux *http.ServeMux) {
 				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME/repositories", func(w http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "GET")
-					fmt.Fprintf(w, `{"total_count":1,"repositories":[{"id":1}]}`)
+					fmt.Fprint(w, `{"total_count":1,"repositories":[{"id":1}]}`)
 				})
 			},
 			call: func(ctx context.Context, client *Client) (*SelectedReposList, *Response, error) {
@@ -579,7 +582,7 @@ func TestCodespacesService_SetSelectedReposForSecret(t *testing.T) {
 		{
 			name: "User",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/user/codespaces/secrets/NAME/repositories", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/user/codespaces/secrets/NAME/repositories", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "PUT")
 					testHeader(t, r, "Content-Type", "application/json")
 					testBody(t, r, `{"selected_repository_ids":[64780797]}`+"\n")
@@ -593,7 +596,7 @@ func TestCodespacesService_SetSelectedReposForSecret(t *testing.T) {
 		{
 			name: "Org",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME/repositories", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME/repositories", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "PUT")
 					testHeader(t, r, "Content-Type", "application/json")
 					testBody(t, r, `{"selected_repository_ids":[64780797]}`+"\n")
@@ -650,19 +653,22 @@ func TestCodespacesService_AddSelectedReposForSecret(t *testing.T) {
 		{
 			name: "User",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/user/codespaces/secrets/NAME/repositories/1234", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/user/codespaces/secrets/NAME/repositories/1234", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "PUT")
 				})
 			},
 			call: func(ctx context.Context, client *Client) (*Response, error) {
 				return client.Codespaces.AddSelectedRepoToUserSecret(ctx, "NAME", repo)
 			},
+			badCall: func(ctx context.Context, client *Client) (*Response, error) {
+				return client.Codespaces.AddSelectedRepoToUserSecret(ctx, "NAME", &Repository{ID: nil})
+			},
 			methodName: "AddSelectedRepoToUserSecret",
 		},
 		{
 			name: "Org",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME/repositories/1234", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME/repositories/1234", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "PUT")
 				})
 			},
@@ -717,19 +723,22 @@ func TestCodespacesService_RemoveSelectedReposFromSecret(t *testing.T) {
 		{
 			name: "User",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/user/codespaces/secrets/NAME/repositories/1234", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/user/codespaces/secrets/NAME/repositories/1234", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "DELETE")
 				})
 			},
 			call: func(ctx context.Context, client *Client) (*Response, error) {
 				return client.Codespaces.RemoveSelectedRepoFromUserSecret(ctx, "NAME", repo)
 			},
+			badCall: func(ctx context.Context, client *Client) (*Response, error) {
+				return client.Codespaces.RemoveSelectedRepoFromUserSecret(ctx, "NAME", nil)
+			},
 			methodName: "RemoveSelectedRepoFromUserSecret",
 		},
 		{
 			name: "Org",
 			handleFunc: func(mux *http.ServeMux) {
-				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME/repositories/1234", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/orgs/o/codespaces/secrets/NAME/repositories/1234", func(_ http.ResponseWriter, r *http.Request) {
 					testMethod(t, r, "DELETE")
 				})
 			},

@@ -29,10 +29,16 @@ type Issue struct {
 	Number *int    `json:"number,omitempty"`
 	State  *string `json:"state,omitempty"`
 	// StateReason can be one of: "completed", "not_planned", "reopened".
-	StateReason       *string           `json:"state_reason,omitempty"`
-	Locked            *bool             `json:"locked,omitempty"`
-	Title             *string           `json:"title,omitempty"`
-	Body              *string           `json:"body,omitempty"`
+	StateReason *string `json:"state_reason,omitempty"`
+	Locked      *bool   `json:"locked,omitempty"`
+	Title       *string `json:"title,omitempty"`
+	Body        *string `json:"body,omitempty"`
+	// AuthorAssociation is the issue author's relationship to the repository.
+	// Possible values are "COLLABORATOR", "CONTRIBUTOR", "FIRST_TIMER", "FIRST_TIME_CONTRIBUTOR", "MEMBER", "OWNER", or "NONE".
+	//
+	// Deprecated: GitHub will remove this field from Events API payloads on October 7, 2025.
+	// Use the Issues REST API endpoint to retrieve this information.
+	// See: https://docs.github.com/rest/issues/issues#get-an-issue
 	AuthorAssociation *string           `json:"author_association,omitempty"`
 	User              *User             `json:"user,omitempty"`
 	Labels            []*Label          `json:"labels,omitempty"`
@@ -136,7 +142,7 @@ type PullRequestLinks struct {
 }
 
 // IssueType represents the type of issue.
-// For now it shows up when receiveing an Issue event.
+// For now it shows up when receiving an Issue event.
 type IssueType struct {
 	ID          *int64     `json:"id,omitempty"`
 	NodeID      *string    `json:"node_id,omitempty"`
@@ -250,7 +256,7 @@ type IssueListByRepoOptions struct {
 // GitHub API docs: https://docs.github.com/rest/issues/issues#list-repository-issues
 //
 //meta:operation GET /repos/{owner}/{repo}/issues
-func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo string, opts *IssueListByRepoOptions) ([]*Issue, *Response, error) {
+func (s *IssuesService) ListByRepo(ctx context.Context, owner, repo string, opts *IssueListByRepoOptions) ([]*Issue, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues", owner, repo)
 	u, err := addOptions(u, opts)
 	if err != nil {
@@ -279,7 +285,7 @@ func (s *IssuesService) ListByRepo(ctx context.Context, owner string, repo strin
 // GitHub API docs: https://docs.github.com/rest/issues/issues#get-an-issue
 //
 //meta:operation GET /repos/{owner}/{repo}/issues/{issue_number}
-func (s *IssuesService) Get(ctx context.Context, owner string, repo string, number int) (*Issue, *Response, error) {
+func (s *IssuesService) Get(ctx context.Context, owner, repo string, number int) (*Issue, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues/%d", owner, repo, number)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
@@ -303,7 +309,7 @@ func (s *IssuesService) Get(ctx context.Context, owner string, repo string, numb
 // GitHub API docs: https://docs.github.com/rest/issues/issues#create-an-issue
 //
 //meta:operation POST /repos/{owner}/{repo}/issues
-func (s *IssuesService) Create(ctx context.Context, owner string, repo string, issue *IssueRequest) (*Issue, *Response, error) {
+func (s *IssuesService) Create(ctx context.Context, owner, repo string, issue *IssueRequest) (*Issue, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues", owner, repo)
 	req, err := s.client.NewRequest("POST", u, issue)
 	if err != nil {
@@ -324,7 +330,7 @@ func (s *IssuesService) Create(ctx context.Context, owner string, repo string, i
 // GitHub API docs: https://docs.github.com/rest/issues/issues#update-an-issue
 //
 //meta:operation PATCH /repos/{owner}/{repo}/issues/{issue_number}
-func (s *IssuesService) Edit(ctx context.Context, owner string, repo string, number int, issue *IssueRequest) (*Issue, *Response, error) {
+func (s *IssuesService) Edit(ctx context.Context, owner, repo string, number int, issue *IssueRequest) (*Issue, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues/%d", owner, repo, number)
 	req, err := s.client.NewRequest("PATCH", u, issue)
 	if err != nil {
@@ -379,7 +385,7 @@ type LockIssueOptions struct {
 // GitHub API docs: https://docs.github.com/rest/issues/issues#lock-an-issue
 //
 //meta:operation PUT /repos/{owner}/{repo}/issues/{issue_number}/lock
-func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, number int, opts *LockIssueOptions) (*Response, error) {
+func (s *IssuesService) Lock(ctx context.Context, owner, repo string, number int, opts *LockIssueOptions) (*Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues/%d/lock", owner, repo, number)
 	req, err := s.client.NewRequest("PUT", u, opts)
 	if err != nil {
@@ -394,7 +400,7 @@ func (s *IssuesService) Lock(ctx context.Context, owner string, repo string, num
 // GitHub API docs: https://docs.github.com/rest/issues/issues#unlock-an-issue
 //
 //meta:operation DELETE /repos/{owner}/{repo}/issues/{issue_number}/lock
-func (s *IssuesService) Unlock(ctx context.Context, owner string, repo string, number int) (*Response, error) {
+func (s *IssuesService) Unlock(ctx context.Context, owner, repo string, number int) (*Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues/%d/lock", owner, repo, number)
 	req, err := s.client.NewRequest("DELETE", u, nil)
 	if err != nil {

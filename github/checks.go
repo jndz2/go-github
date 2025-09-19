@@ -269,6 +269,8 @@ type ListCheckRunsResults struct {
 }
 
 // ListCheckRunsForRef lists check runs for a specific ref.
+// The ref can be a commit SHA, branch name `heads/<branch name>`, or tag name `tags/<tag name>`.
+// For more information, see "Git References" in the Git documentation https://git-scm.com/book/en/v2/Git-Internals-Git-References.
 //
 // GitHub API docs: https://docs.github.com/rest/checks/runs#list-check-runs-for-a-git-reference
 //
@@ -345,7 +347,7 @@ func (s *ChecksService) ReRequestCheckRun(ctx context.Context, owner, repo strin
 // ListCheckSuiteOptions represents parameters to list check suites.
 type ListCheckSuiteOptions struct {
 	CheckName *string `url:"check_name,omitempty"` // Filters checks suites by the name of the check run.
-	AppID     *int    `url:"app_id,omitempty"`     // Filters check suites by GitHub App id.
+	AppID     *int64  `url:"app_id,omitempty"`     // Filters check suites by GitHub App id.
 
 	ListOptions
 }
@@ -357,6 +359,8 @@ type ListCheckSuiteResults struct {
 }
 
 // ListCheckSuitesForRef lists check suite for a specific ref.
+// The ref can be a commit SHA, branch name `heads/<branch name>`, or tag name `tags/<tag name>`.
+// For more information, see "Git References" in the Git documentation https://git-scm.com/book/en/v2/Git-Internals-Git-References.
 //
 // GitHub API docs: https://docs.github.com/rest/checks/suites#list-check-suites-for-a-git-reference
 //

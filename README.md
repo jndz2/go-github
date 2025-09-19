@@ -1,7 +1,7 @@
 # go-github #
 
 [![go-github release (latest SemVer)](https://img.shields.io/github/v/release/google/go-github?sort=semver)](https://github.com/google/go-github/releases)
-[![Go Reference](https://img.shields.io/static/v1?label=godoc&message=reference&color=blue)](https://pkg.go.dev/github.com/google/go-github/v72/github)
+[![Go Reference](https://img.shields.io/static/v1?label=godoc&message=reference&color=blue)](https://pkg.go.dev/github.com/google/go-github/v74/github)
 [![Test Status](https://github.com/google/go-github/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/google/go-github/actions/workflows/tests.yml)
 [![Test Coverage](https://codecov.io/gh/google/go-github/branch/master/graph/badge.svg)](https://codecov.io/gh/google/go-github)
 [![Discuss at go-github@googlegroups.com](https://img.shields.io/badge/discuss-go--github%40googlegroups.com-blue.svg)](https://groups.google.com/group/go-github)
@@ -30,7 +30,7 @@ If you're interested in using the [GraphQL API v4][], the recommended library is
 go-github is compatible with modern Go releases in module mode, with Go installed:
 
 ```bash
-go get github.com/google/go-github/v72
+go get github.com/google/go-github/v74
 ```
 
 will resolve and add the package to the current development module, along with its dependencies.
@@ -38,7 +38,7 @@ will resolve and add the package to the current development module, along with i
 Alternatively the same can be achieved if you use import in a package:
 
 ```go
-import "github.com/google/go-github/v72/github"
+import "github.com/google/go-github/v74/github"
 ```
 
 and run `go get` without parameters.
@@ -46,13 +46,13 @@ and run `go get` without parameters.
 Finally, to use the top-of-trunk version of this repo, use the following command:
 
 ```bash
-go get github.com/google/go-github/v72@master
+go get github.com/google/go-github/v74@master
 ```
 
 ## Usage ##
 
 ```go
-import "github.com/google/go-github/v72/github"	// with go modules enabled (GO111MODULE=on or outside GOPATH)
+import "github.com/google/go-github/v74/github"	// with go modules enabled (GO111MODULE=on or outside GOPATH)
 import "github.com/google/go-github/github" // with go modules disabled
 ```
 
@@ -80,7 +80,7 @@ The services of a client divide the API into logical chunks and correspond to
 the structure of the [GitHub API documentation](https://docs.github.com/en/rest).
 
 NOTE: Using the [context](https://pkg.go.dev/context) package, one can easily
-pass cancelation signals and deadlines to various services of the client for
+pass cancellation signals and deadlines to various services of the client for
 handling a request. In case there is no context available, then `context.Background()`
 can be used as a starting point.
 
@@ -102,7 +102,7 @@ include the specified OAuth token. Therefore, authenticated clients should
 almost never be shared between different users.
 
 For API methods that require HTTP Basic Authentication, use the
-[`BasicAuthTransport`](https://pkg.go.dev/github.com/google/go-github/github#BasicAuthTransport).
+[`BasicAuthTransport`](https://pkg.go.dev/github.com/google/go-github/v74/github#BasicAuthTransport).
 
 #### As a GitHub App ####
 
@@ -125,7 +125,7 @@ import (
 	"net/http"
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
-	"github.com/google/go-github/v72/github"
+	"github.com/google/go-github/v74/github"
 )
 
 func main() {
@@ -159,7 +159,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/google/go-github/v72/github"
+	"github.com/google/go-github/v74/github"
 	"github.com/jferrl/go-githubauth"
 	"golang.org/x/oauth2"
 )
@@ -189,54 +189,71 @@ using the installation ID of the GitHub app and authenticate with the OAuth meth
 
 ### Rate Limiting ###
 
-GitHub imposes a rate limit on all API clients. Unauthenticated clients are
-limited to 60 requests per hour, while authenticated clients can make up to
-5,000 requests per hour. The Search API has a custom rate limit. Unauthenticated
-clients are limited to 10 requests per minute, while authenticated clients
-can make up to 30 requests per minute. To receive the higher rate limit when
-making calls that are not issued on behalf of a user,
-use `UnauthenticatedRateLimitedTransport`.
+GitHub imposes rate limits on all API clients. The [primary rate limit](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#about-primary-rate-limits)
+is the limit to the number of REST API requests that a client can make within a
+specific amount of time. This limit helps prevent abuse and denial-of-service
+attacks, and ensures that the API remains available for all users. Some
+endpoints, like the search endpoints, have more restrictive limits.
+Unauthenticated clients may request public data but have a low rate limit,
+while authenticated clients have rate limits based on the client
+identity.
 
-The returned `Response.Rate` value contains the rate limit information
+In addition to primary rate limits, GitHub enforces [secondary rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#about-secondary-rate-limits)
+in order to prevent abuse and keep the API available for all users.
+Secondary rate limits generally limit the number of concurrent requests that a
+client can make.
+
+The client returned `Response.Rate` value contains the rate limit information
 from the most recent API call. If a recent enough response isn't
-available, you can use `RateLimits` to fetch the most up-to-date rate
-limit data for the client.
+available, you can use the client `RateLimits` service to fetch the most
+up-to-date rate limit data for the client.
 
-To detect an API rate limit error, you can check if its type is `*github.RateLimitError`:
-
-```go
-repos, _, err := client.Repositories.List(ctx, "", nil)
-if _, ok := err.(*github.RateLimitError); ok {
-	log.Println("hit rate limit")
-}
-```
-
-Learn more about GitHub rate limiting in
-["REST API endpoints for rate limits"](https://docs.github.com/en/rest/rate-limit).
-
-In addition to these rate limits, GitHub imposes a secondary rate limit on all API clients.
-This rate limit prevents clients from making too many concurrent requests.
-
-To detect an API secondary rate limit error, you can check if its type is `*github.AbuseRateLimitError`:
+To detect a primary API rate limit error, you can check if the error is a
+`RateLimitError`.
 
 ```go
 repos, _, err := client.Repositories.List(ctx, "", nil)
-if _, ok := err.(*github.AbuseRateLimitError); ok {
-	log.Println("hit secondary rate limit")
+var rateErr *github.RateLimitError
+if errors.As(err, &rateError) {
+	log.Printf("hit primary rate limit, used %d of %d\n", rateErr.Rate.Used, rateErr.rate.Limit)
 }
 ```
 
-Alternatively, you can block until the rate limit is reset by using the `context.WithValue` method:
+To detect an API secondary rate limit error, you can check if the error is an
+`AbuseRateLimitError`.
+
+```go
+repos, _, err := client.Repositories.List(ctx, "", nil)
+var rateErr *github.AbuseRateLimitError
+if errors.As(err, &rateErr) {
+	log.Printf("hit secondary rate limit, retry after %v\n", rateErr.RetryAfter)
+}
+```
+
+If you hit the primary rate limit, you can use the `SleepUntilPrimaryRateLimitResetWhenRateLimited`
+method to block until the rate limit is reset.
 
 ```go
 repos, _, err := client.Repositories.List(context.WithValue(ctx, github.SleepUntilPrimaryRateLimitResetWhenRateLimited, true), "", nil)
 ```
 
-You can use [gofri/go-github-ratelimit](https://github.com/gofri/go-github-ratelimit) to handle
-secondary rate limit sleep-and-retry for you, as well as primary rate limit abuse-prevention and callback triggering.
+If you need to make a request even if the rate limit has been hit you can use
+the `BypassRateLimitCheck` method to bypass the rate limit check and make the
+request anyway.
 
-Learn more about GitHub secondary rate limiting in
-["About secondary rate limits"](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28#about-secondary-rate-limits).
+```go
+repos, _, err := client.Repositories.List(context.WithValue(ctx, github.BypassRateLimitCheck, true), "", nil)
+```
+
+For more advanced use cases, you can use [gofri/go-github-ratelimit](https://github.com/gofri/go-github-ratelimit)
+which provides a middleware (`http.RoundTripper`) that handles both the primary
+rate limit and secondary rate limit for the GitHub API. In this case you can
+set the client `DisableRateLimitCheck` to `true` so the client doesn't track the rate limit usage.
+
+If the client is an [OAuth app](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#primary-rate-limit-for-oauth-apps)
+you can use the apps higher rate limit to request public data by using the
+`UnauthenticatedRateLimitedTransport` to make calls as the app instead of as
+the user.
 
 ### Accepted Status ###
 
@@ -263,15 +280,18 @@ rate limit, as well as help speed up your application. `go-github` does not
 handle conditional requests directly, but is instead designed to work with a
 caching `http.Transport`.
 
-Typically, an [RFC 7234](https://datatracker.ietf.org/doc/html/rfc7234)
-compliant HTTP cache such as [gregjones/httpcache](https://github.com/gregjones/httpcache)
+Typically, an [RFC 9111](https://datatracker.ietf.org/doc/html/rfc9111)
+compliant HTTP cache such as [bartventer/httpcache](https://github.com/bartventer/httpcache)
 is recommended, ex:
 
 ```go
-import "github.com/gregjones/httpcache"
+import (
+	"github.com/bartventer/httpcache"
+	_ "github.com/bartventer/httpcache/store/memcache" //  Register the in-memory backend
+)
 
 client := github.NewClient(
-	httpcache.NewMemoryCacheTransport().Client()
+	httpcache.NewClient("memcache://"),
 ).WithAuthToken(os.Getenv("GITHUB_TOKEN"))
 ```
 
@@ -380,7 +400,7 @@ For complete usage of go-github, see the full [package docs][].
 
 [GitHub API v3]: https://docs.github.com/en/rest
 [personal access token]: https://github.com/blog/1509-personal-api-tokens
-[package docs]: https://pkg.go.dev/github.com/google/go-github/v72/github
+[package docs]: https://pkg.go.dev/github.com/google/go-github/v74/github
 [GraphQL API v4]: https://developer.github.com/v4/
 [shurcooL/githubv4]: https://github.com/shurcooL/githubv4
 [GitHub webhook events]: https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads
@@ -454,7 +474,7 @@ Versions prior to 48.2.0 are not listed.
 
 | go-github Version | GitHub v3 API Version |
 | ----------------- | --------------------- |
-| 72.0.0            | 2022-11-28            |
+| 74.0.0            | 2022-11-28            |
 | ...               | 2022-11-28            |
 | 48.2.0            | 2022-11-28            |
 

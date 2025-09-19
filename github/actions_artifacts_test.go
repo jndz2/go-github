@@ -92,7 +92,7 @@ func TestActionsService_ListArtifacts_notFound(t *testing.T) {
 	ctx := context.Background()
 	artifacts, resp, err := client.Actions.ListArtifacts(ctx, "o", "r", nil)
 	if err == nil {
-		t.Errorf("Expected HTTP 404 response")
+		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
 		t.Errorf("Actions.ListArtifacts return status %d, want %d", got, want)
@@ -174,7 +174,7 @@ func TestActionsService_ListWorkflowRunArtifacts_notFound(t *testing.T) {
 	ctx := context.Background()
 	artifacts, resp, err := client.Actions.ListWorkflowRunArtifacts(ctx, "o", "r", 1, nil)
 	if err == nil {
-		t.Errorf("Expected HTTP 404 response")
+		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
 		t.Errorf("Actions.ListWorkflowRunArtifacts return status %d, want %d", got, want)
@@ -261,7 +261,7 @@ func TestActionsService_GetArtifact_notFound(t *testing.T) {
 	ctx := context.Background()
 	artifact, resp, err := client.Actions.GetArtifact(ctx, "o", "r", 1)
 	if err == nil {
-		t.Errorf("Expected HTTP 404 response")
+		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
 		t.Errorf("Actions.GetArtifact return status %d, want %d", got, want)
@@ -320,7 +320,7 @@ func TestActionsService_DownloadArtifact(t *testing.T) {
 			})
 
 			// Add custom round tripper
-			client.client.Transport = roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+			client.client.Transport = roundTripperFunc(func(*http.Request) (*http.Response, error) {
 				return nil, errors.New("failed to download artifact")
 			})
 			// propagate custom round tripper to client without CheckRedirect
@@ -456,7 +456,7 @@ func TestActionsService_DownloadArtifact_StatusMovedPermanently_followRedirects(
 			})
 			mux.HandleFunc("/redirect", func(w http.ResponseWriter, r *http.Request) {
 				testMethod(t, r, "GET")
-				http.Redirect(w, r, "http://github.com/artifact", http.StatusFound)
+				http.Redirect(w, r, "https://github.com/artifact", http.StatusFound)
 			})
 
 			ctx := context.Background()
@@ -467,7 +467,7 @@ func TestActionsService_DownloadArtifact_StatusMovedPermanently_followRedirects(
 			if resp.StatusCode != http.StatusFound {
 				t.Errorf("Actions.DownloadArtifact return status %d, want %d", resp.StatusCode, http.StatusFound)
 			}
-			want := "http://github.com/artifact"
+			want := "https://github.com/artifact"
 			if url.String() != want {
 				t.Errorf("Actions.DownloadArtifact returned %+v, want %+v", url.String(), want)
 			}
@@ -510,7 +510,7 @@ func TestActionsService_DownloadArtifact_unexpectedCode(t *testing.T) {
 			ctx := context.Background()
 			url, resp, err := client.Actions.DownloadArtifact(ctx, "o", "r", 1, 1)
 			if err == nil {
-				t.Fatalf("Actions.DownloadArtifact should return error on unexpected code")
+				t.Fatal("Actions.DownloadArtifact should return error on unexpected code")
 			}
 			if !strings.Contains(err.Error(), "unexpected status code") {
 				t.Error("Actions.DownloadArtifact should return unexpected status code")
@@ -529,7 +529,7 @@ func TestActionsService_DeleteArtifact(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	mux.HandleFunc("/repos/o/r/actions/artifacts/1", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/repos/o/r/actions/artifacts/1", func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	})
 
@@ -580,7 +580,7 @@ func TestActionsService_DeleteArtifact_notFound(t *testing.T) {
 	ctx := context.Background()
 	resp, err := client.Actions.DeleteArtifact(ctx, "o", "r", 1)
 	if err == nil {
-		t.Errorf("Expected HTTP 404 response")
+		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
 		t.Errorf("Actions.DeleteArtifact return status %d, want %d", got, want)

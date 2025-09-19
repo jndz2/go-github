@@ -43,7 +43,7 @@ func TestTeamsService_ListComments(t *testing.T) {
 		testFormValues(t, r, values{
 			"direction": "desc",
 		})
-		fmt.Fprintf(w,
+		fmt.Fprint(w,
 			`[
 				{
 					"author": {
@@ -388,7 +388,7 @@ func TestTeamsService_DeleteComment(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
+	handlerFunc := func(_ http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "DELETE")
 	}
 

@@ -298,22 +298,22 @@ func TestRepositoriesService_DownloadContents_NoDownloadURL(t *testing.T) {
 		fmt.Fprint(w, `[{
 		  "type": "file",
 		  "name": "f",
-		  "content": ""	
+		  "content": ""
 		}]`)
 	})
 
 	ctx := context.Background()
 	reader, resp, err := client.Repositories.DownloadContents(ctx, "o", "r", "d/f", nil)
 	if err == nil {
-		t.Errorf("Repositories.DownloadContents did not return expected error")
+		t.Error("Repositories.DownloadContents did not return expected error")
 	}
 
 	if resp == nil {
-		t.Errorf("Repositories.DownloadContents did not return expected response")
+		t.Error("Repositories.DownloadContents did not return expected response")
 	}
 
 	if reader != nil {
-		t.Errorf("Repositories.DownloadContents did not return expected reader")
+		t.Error("Repositories.DownloadContents did not return expected reader")
 	}
 }
 
@@ -338,15 +338,15 @@ func TestRepositoriesService_DownloadContents_NoFile(t *testing.T) {
 	ctx := context.Background()
 	reader, resp, err := client.Repositories.DownloadContents(ctx, "o", "r", "d/f", nil)
 	if err == nil {
-		t.Errorf("Repositories.DownloadContents did not return expected error")
+		t.Error("Repositories.DownloadContents did not return expected error")
 	}
 
 	if resp == nil {
-		t.Errorf("Repositories.DownloadContents did not return expected response")
+		t.Error("Repositories.DownloadContents did not return expected response")
 	}
 
 	if reader != nil {
-		t.Errorf("Repositories.DownloadContents did not return expected reader")
+		t.Error("Repositories.DownloadContents did not return expected reader")
 	}
 }
 
@@ -389,7 +389,7 @@ func TestRepositoriesService_DownloadContentsWithMeta_SuccessForFile(t *testing.
 			t.Errorf("Repositories.DownloadContentsWithMeta returned content name %v, want %v", got, want)
 		}
 	} else {
-		t.Errorf("Returned RepositoryContent is null")
+		t.Error("Returned RepositoryContent is null")
 	}
 
 	const methodName = "DownloadContentsWithMeta"
@@ -452,7 +452,7 @@ func TestRepositoriesService_DownloadContentsWithMeta_SuccessForDirectory(t *tes
 			t.Errorf("Repositories.DownloadContentsWithMeta returned content name %v, want %v", got, want)
 		}
 	} else {
-		t.Errorf("Returned RepositoryContent is null")
+		t.Error("Returned RepositoryContent is null")
 	}
 }
 
@@ -509,7 +509,7 @@ func TestRepositoriesService_DownloadContentsWithMeta_FailedResponse(t *testing.
 			t.Errorf("Repositories.DownloadContentsWithMeta returned content name %v, want %v", got, want)
 		}
 	} else {
-		t.Errorf("Returned RepositoryContent is null")
+		t.Error("Returned RepositoryContent is null")
 	}
 }
 
@@ -536,19 +536,19 @@ func TestRepositoriesService_DownloadContentsWithMeta_NoDownloadURL(t *testing.T
 	ctx := context.Background()
 	reader, contents, resp, err := client.Repositories.DownloadContentsWithMeta(ctx, "o", "r", "d/f", nil)
 	if err == nil {
-		t.Errorf("Repositories.DownloadContentsWithMeta did not return expected error")
+		t.Error("Repositories.DownloadContentsWithMeta did not return expected error")
 	}
 
 	if reader != nil {
-		t.Errorf("Repositories.DownloadContentsWithMeta did not return expected reader")
+		t.Error("Repositories.DownloadContentsWithMeta did not return expected reader")
 	}
 
 	if resp == nil {
-		t.Errorf("Repositories.DownloadContentsWithMeta did not return expected response")
+		t.Error("Repositories.DownloadContentsWithMeta did not return expected response")
 	}
 
 	if contents == nil {
-		t.Errorf("Repositories.DownloadContentsWithMeta did not return expected content")
+		t.Error("Repositories.DownloadContentsWithMeta did not return expected content")
 	}
 }
 
@@ -564,11 +564,11 @@ func TestRepositoriesService_DownloadContentsWithMeta_NoFile(t *testing.T) {
 	ctx := context.Background()
 	_, _, resp, err := client.Repositories.DownloadContentsWithMeta(ctx, "o", "r", "d/f", nil)
 	if err == nil {
-		t.Errorf("Repositories.DownloadContentsWithMeta did not return expected error")
+		t.Error("Repositories.DownloadContentsWithMeta did not return expected error")
 	}
 
 	if resp == nil {
-		t.Errorf("Repositories.DownloadContentsWithMeta did not return expected response")
+		t.Error("Repositories.DownloadContentsWithMeta did not return expected response")
 	}
 }
 
@@ -887,7 +887,7 @@ func TestRepositoriesService_GetArchiveLink(t *testing.T) {
 
 			mux.HandleFunc("/repos/o/r/tarball/yo", func(w http.ResponseWriter, r *http.Request) {
 				testMethod(t, r, "GET")
-				http.Redirect(w, r, "http://github.com/a", http.StatusFound)
+				http.Redirect(w, r, "https://github.com/a", http.StatusFound)
 			})
 			ctx := context.Background()
 			url, resp, err := client.Repositories.GetArchiveLink(ctx, "o", "r", Tarball, &RepositoryContentGetOptions{Ref: "yo"}, 1)
@@ -897,7 +897,7 @@ func TestRepositoriesService_GetArchiveLink(t *testing.T) {
 			if resp.StatusCode != http.StatusFound {
 				t.Errorf("Repositories.GetArchiveLink returned status: %d, want %d", resp.StatusCode, http.StatusFound)
 			}
-			want := "http://github.com/a"
+			want := "https://github.com/a"
 			if url.String() != want {
 				t.Errorf("Repositories.GetArchiveLink returned %+v, want %+v", url.String(), want)
 			}
@@ -909,7 +909,7 @@ func TestRepositoriesService_GetArchiveLink(t *testing.T) {
 			})
 
 			// Add custom round tripper
-			client.client.Transport = roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+			client.client.Transport = roundTripperFunc(func(*http.Request) (*http.Response, error) {
 				return nil, errors.New("failed to get archive link")
 			})
 			testBadOptions(t, methodName, func() (err error) {
@@ -944,7 +944,7 @@ func TestRepositoriesService_GetArchiveLink_StatusMovedPermanently_dontFollowRed
 
 			mux.HandleFunc("/repos/o/r/tarball", func(w http.ResponseWriter, r *http.Request) {
 				testMethod(t, r, "GET")
-				http.Redirect(w, r, "http://github.com/a", http.StatusMovedPermanently)
+				http.Redirect(w, r, "https://github.com/a", http.StatusMovedPermanently)
 			})
 			ctx := context.Background()
 			_, resp, _ := client.Repositories.GetArchiveLink(ctx, "o", "r", Tarball, &RepositoryContentGetOptions{}, 0)
@@ -985,7 +985,7 @@ func TestRepositoriesService_GetArchiveLink_StatusMovedPermanently_followRedirec
 			})
 			mux.HandleFunc("/redirect", func(w http.ResponseWriter, r *http.Request) {
 				testMethod(t, r, "GET")
-				http.Redirect(w, r, "http://github.com/a", http.StatusFound)
+				http.Redirect(w, r, "https://github.com/a", http.StatusFound)
 			})
 			ctx := context.Background()
 			url, resp, err := client.Repositories.GetArchiveLink(ctx, "o", "r", Tarball, &RepositoryContentGetOptions{}, 1)
@@ -995,7 +995,7 @@ func TestRepositoriesService_GetArchiveLink_StatusMovedPermanently_followRedirec
 			if resp.StatusCode != http.StatusFound {
 				t.Errorf("Repositories.GetArchiveLink returned status: %d, want %d", resp.StatusCode, http.StatusFound)
 			}
-			want := "http://github.com/a"
+			want := "https://github.com/a"
 			if url.String() != want {
 				t.Errorf("Repositories.GetArchiveLink returned %+v, want %+v", url.String(), want)
 			}

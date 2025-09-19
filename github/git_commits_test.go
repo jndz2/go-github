@@ -32,7 +32,7 @@ func mockSigner(t *testing.T, signature string, emitErr error, wantMessage strin
 }
 
 func uncalledSigner(t *testing.T) MessageSignerFunc {
-	return func(w io.Writer, r io.Reader) error {
+	return func(io.Writer, io.Reader) error {
 		t.Error("MessageSignerFunc should not be called")
 		return nil
 	}
@@ -176,7 +176,7 @@ func TestGitService_CreateCommit(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
 
-	input := &Commit{
+	input := Commit{
 		Message: Ptr("Commit Message."),
 		Tree:    &Tree{SHA: Ptr("t")},
 		Parents: []*Commit{{SHA: Ptr("p")}},
@@ -231,7 +231,7 @@ func TestGitService_CreateSignedCommit(t *testing.T) {
 
 	signature := "----- BEGIN PGP SIGNATURE -----\n\naaaa\naaaa\n----- END PGP SIGNATURE -----"
 
-	input := &Commit{
+	input := Commit{
 		Message: Ptr("Commit Message."),
 		Tree:    &Tree{SHA: Ptr("t")},
 		Parents: []*Commit{{SHA: Ptr("p")}},
@@ -288,24 +288,13 @@ func TestGitService_CreateSignedCommitWithInvalidParams(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	input := &Commit{}
+	input := Commit{}
 
 	ctx := context.Background()
 	opts := CreateCommitOptions{Signer: uncalledSigner(t)}
 	_, _, err := client.Git.CreateCommit(ctx, "o", "r", input, &opts)
 	if err == nil {
-		t.Errorf("Expected error to be returned because invalid params were passed")
-	}
-}
-
-func TestGitService_CreateCommitWithNilCommit(t *testing.T) {
-	t.Parallel()
-	client, _, _ := setup(t)
-
-	ctx := context.Background()
-	_, _, err := client.Git.CreateCommit(ctx, "o", "r", nil, nil)
-	if err == nil {
-		t.Errorf("Expected error to be returned because commit=nil")
+		t.Error("Expected error to be returned because invalid params were passed")
 	}
 }
 
@@ -327,7 +316,7 @@ committer go-github <go-github@github.com> 1493849023 +0200
 
 Commit Message.`
 	sha := "commitSha"
-	input := &Commit{
+	input := Commit{
 		SHA:     &sha,
 		Message: Ptr("Commit Message."),
 		Tree:    &Tree{SHA: Ptr("t")},
@@ -371,7 +360,7 @@ func TestGitService_createSignature_nilSigner(t *testing.T) {
 	_, err := createSignature(nil, a)
 
 	if err == nil {
-		t.Errorf("Expected error to be returned because no author was passed")
+		t.Error("Expected error to be returned because no author was passed")
 	}
 }
 
@@ -380,7 +369,7 @@ func TestGitService_createSignature_nilCommit(t *testing.T) {
 	_, err := createSignature(uncalledSigner(t), nil)
 
 	if err == nil {
-		t.Errorf("Expected error to be returned because no author was passed")
+		t.Error("Expected error to be returned because no author was passed")
 	}
 }
 
@@ -397,7 +386,7 @@ func TestGitService_createSignature_signerError(t *testing.T) {
 	_, err := createSignature(signer, a)
 
 	if err == nil {
-		t.Errorf("Expected error to be returned because signer returned an error")
+		t.Error("Expected error to be returned because signer returned an error")
 	}
 }
 
@@ -405,7 +394,7 @@ func TestGitService_createSignatureMessage_nilCommit(t *testing.T) {
 	t.Parallel()
 	_, err := createSignatureMessage(nil)
 	if err == nil {
-		t.Errorf("Expected error to be returned due to nil key")
+		t.Error("Expected error to be returned due to nil key")
 	}
 }
 
@@ -423,7 +412,7 @@ func TestGitService_createSignatureMessage_nilMessage(t *testing.T) {
 		},
 	})
 	if err == nil {
-		t.Errorf("Expected error to be returned due to nil key")
+		t.Error("Expected error to be returned due to nil key")
 	}
 }
 
@@ -441,7 +430,7 @@ func TestGitService_createSignatureMessage_emptyMessage(t *testing.T) {
 		},
 	})
 	if err == nil {
-		t.Errorf("Expected error to be returned due to nil key")
+		t.Error("Expected error to be returned due to nil key")
 	}
 }
 
@@ -453,7 +442,7 @@ func TestGitService_createSignatureMessage_nilAuthor(t *testing.T) {
 		Author:  nil,
 	})
 	if err == nil {
-		t.Errorf("Expected error to be returned due to nil key")
+		t.Error("Expected error to be returned due to nil key")
 	}
 }
 
@@ -513,7 +502,7 @@ func TestGitService_CreateCommit_invalidOwner(t *testing.T) {
 	client, _, _ := setup(t)
 
 	ctx := context.Background()
-	_, _, err := client.Git.CreateCommit(ctx, "%", "%", &Commit{}, nil)
+	_, _, err := client.Git.CreateCommit(ctx, "%", "%", Commit{}, nil)
 	testURLParseError(t, err)
 }
 
