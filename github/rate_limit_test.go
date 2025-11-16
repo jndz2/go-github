@@ -6,7 +6,6 @@
 package github
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -57,7 +56,7 @@ func TestRateLimits(t *testing.T) {
 		}}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	rate, _, err := client.RateLimit.Get(ctx)
 	if err != nil {
 		t.Errorf("RateLimits returned error: %v", err)
@@ -110,7 +109,7 @@ func TestRateLimits(t *testing.T) {
 			Limit:     9,
 			Remaining: 8,
 			Used:      1,
-			Reset:     Timestamp{time.Date(2013, time.July, 1, 17, 48, 00, 0, time.UTC).Local()},
+			Reset:     Timestamp{time.Date(2013, time.July, 1, 17, 48, 0, 0, time.UTC).Local()},
 		},
 		DependencySnapshots: &Rate{
 			Limit:     10,
@@ -195,7 +194,7 @@ func TestRateLimits_coverage(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const methodName = "RateLimits"
 	testNewRequestAndDoFailure(t, methodName, client, func() (*Response, error) {
@@ -230,7 +229,7 @@ func TestRateLimits_overQuota(t *testing.T) {
 		}}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	rate, _, err := client.RateLimit.Get(ctx)
 	if err != nil {
 		t.Errorf("RateLimits returned error: %v", err)
@@ -283,7 +282,7 @@ func TestRateLimits_overQuota(t *testing.T) {
 			Limit:     9,
 			Remaining: 8,
 			Used:      1,
-			Reset:     Timestamp{time.Date(2013, time.July, 1, 17, 48, 00, 0, time.UTC).Local()},
+			Reset:     Timestamp{time.Date(2013, time.July, 1, 17, 48, 0, 0, time.UTC).Local()},
 		},
 		DependencySnapshots: &Rate{
 			Limit:     10,

@@ -6,11 +6,9 @@
 package github
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -28,7 +26,7 @@ func TestRepositoriesService_ListHookDeliveries(t *testing.T) {
 
 	opt := &ListCursorOptions{Cursor: "v1_12077215967"}
 
-	ctx := context.Background()
+	ctx := t.Context()
 	hooks, _, err := client.Repositories.ListHookDeliveries(ctx, "o", "r", 1, opt)
 	if err != nil {
 		t.Errorf("Repositories.ListHookDeliveries returned error: %v", err)
@@ -36,7 +34,7 @@ func TestRepositoriesService_ListHookDeliveries(t *testing.T) {
 
 	want := []*HookDelivery{{ID: Ptr(int64(1))}, {ID: Ptr(int64(2))}}
 	if d := cmp.Diff(hooks, want); d != "" {
-		t.Errorf("Repositories.ListHooks want (-), got (+):\n%s", d)
+		t.Errorf("Repositories.ListHooks want (-), got (+):\n%v", d)
 	}
 
 	const methodName = "ListHookDeliveries"
@@ -58,7 +56,7 @@ func TestRepositoriesService_ListHookDeliveries_invalidOwner(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Repositories.ListHookDeliveries(ctx, "%", "%", 1, nil)
 	testURLParseError(t, err)
 }
@@ -72,7 +70,7 @@ func TestRepositoriesService_GetHookDelivery(t *testing.T) {
 		fmt.Fprint(w, `{"id":1}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	hook, _, err := client.Repositories.GetHookDelivery(ctx, "o", "r", 1, 1)
 	if err != nil {
 		t.Errorf("Repositories.GetHookDelivery returned error: %v", err)
@@ -102,7 +100,7 @@ func TestRepositoriesService_GetHookDelivery_invalidOwner(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Repositories.GetHookDelivery(ctx, "%", "%", 1, 1)
 	testURLParseError(t, err)
 }
@@ -116,7 +114,7 @@ func TestRepositoriesService_RedeliverHookDelivery(t *testing.T) {
 		fmt.Fprint(w, `{"id":1}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	hook, _, err := client.Repositories.RedeliverHookDelivery(ctx, "o", "r", 1, 1)
 	if err != nil {
 		t.Errorf("Repositories.RedeliverHookDelivery returned error: %v", err)
@@ -227,7 +225,7 @@ func TestHookDelivery_ParsePayload(t *testing.T) {
 				t.Error(err)
 			}
 
-			if !reflect.DeepEqual(obj, got) {
+			if !cmp.Equal(obj, got) {
 				t.Errorf("want %T %v, got %T %v", obj, obj, got, got)
 			}
 		})

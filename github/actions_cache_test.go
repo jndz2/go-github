@@ -6,7 +6,6 @@
 package github
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -30,7 +29,7 @@ func TestActionsService_ListCaches(t *testing.T) {
 	})
 
 	opts := &ActionsCacheListOptions{ListOptions: ListOptions{Page: 2}}
-	ctx := context.Background()
+	ctx := t.Context()
 	cacheList, _, err := client.Actions.ListCaches(ctx, "o", "r", opts)
 	if err != nil {
 		t.Errorf("Actions.ListCaches returned error: %v", err)
@@ -60,7 +59,7 @@ func TestActionsService_ListCaches_invalidOwner(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Actions.ListCaches(ctx, "%", "r", nil)
 	testURLParseError(t, err)
 }
@@ -69,7 +68,7 @@ func TestActionsService_ListCaches_invalidRepo(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Actions.ListCaches(ctx, "o", "%", nil)
 	testURLParseError(t, err)
 }
@@ -83,13 +82,13 @@ func TestActionsService_ListCaches_notFound(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	caches, resp, err := client.Actions.ListCaches(ctx, "o", "r", nil)
 	if err == nil {
 		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Actions.ListCaches return status %d, want %d", got, want)
+		t.Errorf("Actions.ListCaches return status %v, want %v", got, want)
 	}
 	if caches != nil {
 		t.Errorf("Actions.ListCaches return %+v, want nil", caches)
@@ -105,7 +104,7 @@ func TestActionsService_DeleteCachesByKey(t *testing.T) {
 		testFormValues(t, r, values{"key": "1", "ref": "main"})
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Actions.DeleteCachesByKey(ctx, "o", "r", "1", Ptr("main"))
 	if err != nil {
 		t.Errorf("Actions.DeleteCachesByKey return error: %v", err)
@@ -126,7 +125,7 @@ func TestActionsService_DeleteCachesByKey_invalidOwner(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Actions.DeleteCachesByKey(ctx, "%", "r", "1", Ptr("main"))
 	testURLParseError(t, err)
 }
@@ -135,10 +134,11 @@ func TestActionsService_DeleteCachesByKey_invalidRepo(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Actions.DeleteCachesByKey(ctx, "o", "%", "1", Ptr("main"))
 	testURLParseError(t, err)
 }
+
 func TestActionsService_DeleteCachesByKey_notFound(t *testing.T) {
 	t.Parallel()
 	client, mux, _ := setup(t)
@@ -148,13 +148,13 @@ func TestActionsService_DeleteCachesByKey_notFound(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Actions.DeleteCachesByKey(ctx, "o", "r", "1", Ptr("main"))
 	if err == nil {
 		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Actions.DeleteCachesByKey return status %d, want %d", got, want)
+		t.Errorf("Actions.DeleteCachesByKey return status %v, want %v", got, want)
 	}
 }
 
@@ -166,7 +166,7 @@ func TestActionsService_DeleteCachesByID(t *testing.T) {
 		testMethod(t, r, "DELETE")
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Actions.DeleteCachesByID(ctx, "o", "r", 1)
 	if err != nil {
 		t.Errorf("Actions.DeleteCachesByID return error: %v", err)
@@ -187,7 +187,7 @@ func TestActionsService_DeleteCachesByID_invalidOwner(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Actions.DeleteCachesByID(ctx, "%", "r", 1)
 	testURLParseError(t, err)
 }
@@ -196,7 +196,7 @@ func TestActionsService_DeleteCachesByID_invalidRepo(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Actions.DeleteCachesByID(ctx, "o", "%", 1)
 	testURLParseError(t, err)
 }
@@ -210,13 +210,13 @@ func TestActionsService_DeleteCachesByID_notFound(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Actions.DeleteCachesByID(ctx, "o", "r", 1)
 	if err == nil {
 		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Actions.DeleteCachesByID return status %d, want %d", got, want)
+		t.Errorf("Actions.DeleteCachesByID return status %v, want %v", got, want)
 	}
 }
 
@@ -235,7 +235,7 @@ func TestActionsService_GetCacheUsageForRepo(t *testing.T) {
 		)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	cacheUse, _, err := client.Actions.GetCacheUsageForRepo(ctx, "o", "r")
 	if err != nil {
 		t.Errorf("Actions.GetCacheUsageForRepo returned error: %v", err)
@@ -265,7 +265,7 @@ func TestActionsService_GetCacheUsageForRepo_invalidOwner(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Actions.GetCacheUsageForRepo(ctx, "%", "r")
 	testURLParseError(t, err)
 }
@@ -274,7 +274,7 @@ func TestActionsService_GetCacheUsageForRepo_invalidRepo(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Actions.GetCacheUsageForRepo(ctx, "o", "%")
 	testURLParseError(t, err)
 }
@@ -288,13 +288,13 @@ func TestActionsService_GetCacheUsageForRepo_notFound(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	caches, resp, err := client.Actions.GetCacheUsageForRepo(ctx, "o", "r")
 	if err == nil {
 		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Actions.GetCacheUsageForRepo return status %d, want %d", got, want)
+		t.Errorf("Actions.GetCacheUsageForRepo return status %v, want %v", got, want)
 	}
 	if caches != nil {
 		t.Errorf("Actions.GetCacheUsageForRepo return %+v, want nil", caches)
@@ -317,7 +317,7 @@ func TestActionsService_ListCacheUsageByRepoForOrg(t *testing.T) {
 	})
 
 	opts := &ListOptions{PerPage: 1, Page: 2}
-	ctx := context.Background()
+	ctx := t.Context()
 	cacheList, _, err := client.Actions.ListCacheUsageByRepoForOrg(ctx, "o", opts)
 	if err != nil {
 		t.Errorf("Actions.ListCacheUsageByRepoForOrg returned error: %v", err)
@@ -347,7 +347,7 @@ func TestActionsService_ListCacheUsageByRepoForOrg_invalidOrganization(t *testin
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Actions.ListCacheUsageByRepoForOrg(ctx, "%", nil)
 	testURLParseError(t, err)
 }
@@ -361,13 +361,13 @@ func TestActionsService_ListCacheUsageByRepoForOrg_notFound(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	caches, resp, err := client.Actions.ListCacheUsageByRepoForOrg(ctx, "o", nil)
 	if err == nil {
 		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Actions.ListCacheUsageByRepoForOrg return status %d, want %d", got, want)
+		t.Errorf("Actions.ListCacheUsageByRepoForOrg return status %v, want %v", got, want)
 	}
 	if caches != nil {
 		t.Errorf("Actions.ListCacheUsageByRepoForOrg return %+v, want nil", caches)
@@ -388,7 +388,7 @@ func TestActionsService_GetCacheUsageForOrg(t *testing.T) {
 		)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	cache, _, err := client.Actions.GetTotalCacheUsageForOrg(ctx, "o")
 	if err != nil {
 		t.Errorf("Actions.GetTotalCacheUsageForOrg returned error: %v", err)
@@ -418,7 +418,7 @@ func TestActionsService_GetCacheUsageForOrg_invalidOrganization(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Actions.GetTotalCacheUsageForOrg(ctx, "%")
 	testURLParseError(t, err)
 }
@@ -432,13 +432,13 @@ func TestActionsService_GetCacheUsageForOrg_notFound(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	caches, resp, err := client.Actions.GetTotalCacheUsageForOrg(ctx, "o")
 	if err == nil {
 		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Actions.GetTotalCacheUsageForOrg return status %d, want %d", got, want)
+		t.Errorf("Actions.GetTotalCacheUsageForOrg return status %v, want %v", got, want)
 	}
 	if caches != nil {
 		t.Errorf("Actions.GetTotalCacheUsageForOrg return %+v, want nil", caches)
@@ -459,7 +459,7 @@ func TestActionsService_GetCacheUsageForEnterprise(t *testing.T) {
 		)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	cache, _, err := client.Actions.GetTotalCacheUsageForEnterprise(ctx, "e")
 	if err != nil {
 		t.Errorf("Actions.GetTotalCacheUsageForEnterprise returned error: %v", err)
@@ -489,7 +489,7 @@ func TestActionsService_GetCacheUsageForEnterprise_invalidEnterprise(t *testing.
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Actions.GetTotalCacheUsageForEnterprise(ctx, "%")
 	testURLParseError(t, err)
 }
@@ -503,13 +503,13 @@ func TestActionsService_GetCacheUsageForEnterprise_notFound(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	caches, resp, err := client.Actions.GetTotalCacheUsageForEnterprise(ctx, "o")
 	if err == nil {
 		t.Error("Expected HTTP 404 response")
 	}
 	if got, want := resp.Response.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Actions.GetTotalCacheUsageForEnterprise return status %d, want %d", got, want)
+		t.Errorf("Actions.GetTotalCacheUsageForEnterprise return status %v, want %v", got, want)
 	}
 	if caches != nil {
 		t.Errorf("Actions.GetTotalCacheUsageForEnterprise return %+v, want nil", caches)

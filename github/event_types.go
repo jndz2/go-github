@@ -265,7 +265,7 @@ type DeploymentProtectionRuleEvent struct {
 	Environment *string `json:"environment,omitempty"`
 	Event       *string `json:"event,omitempty"`
 
-	// The URL Github provides for a third-party to use in order to pass/fail a deployment gate
+	// The URL GitHub provides for a third-party to use in order to pass/fail a deployment gate
 	DeploymentCallbackURL *string        `json:"deployment_callback_url,omitempty"`
 	Deployment            *Deployment    `json:"deployment,omitempty"`
 	Repo                  *Repository    `json:"repository,omitempty"`
@@ -859,7 +859,7 @@ type MergeGroup struct {
 	HeadRef *string `json:"head_ref,omitempty"`
 	// The SHA of the merge group's parent commit.
 	BaseSHA *string `json:"base_sha,omitempty"`
-	// The full ref of the branch the merge group will be merged into.
+	// The full ref of the branch into which the merge group will be merged.
 	BaseRef *string `json:"base_ref,omitempty"`
 	// An expanded representation of the head_sha commit.
 	HeadCommit *Commit `json:"head_commit,omitempty"`
@@ -1111,35 +1111,6 @@ type ProjectV2Event struct {
 	Sender       *User         `json:"sender,omitempty"`
 }
 
-// ProjectV2 represents a v2 project.
-type ProjectV2 struct {
-	ID               *int64     `json:"id,omitempty"`
-	NodeID           *string    `json:"node_id,omitempty"`
-	Owner            *User      `json:"owner,omitempty"`
-	Creator          *User      `json:"creator,omitempty"`
-	Title            *string    `json:"title,omitempty"`
-	Description      *string    `json:"description,omitempty"`
-	Public           *bool      `json:"public,omitempty"`
-	ClosedAt         *Timestamp `json:"closed_at,omitempty"`
-	CreatedAt        *Timestamp `json:"created_at,omitempty"`
-	UpdatedAt        *Timestamp `json:"updated_at,omitempty"`
-	DeletedAt        *Timestamp `json:"deleted_at,omitempty"`
-	Number           *int       `json:"number,omitempty"`
-	ShortDescription *string    `json:"short_description,omitempty"`
-	DeletedBy        *User      `json:"deleted_by,omitempty"`
-
-	// Fields migrated from the Project (classic) struct:
-	URL                    *string `json:"url,omitempty"`
-	HTMLURL                *string `json:"html_url,omitempty"`
-	ColumnsURL             *string `json:"columns_url,omitempty"`
-	OwnerURL               *string `json:"owner_url,omitempty"`
-	Name                   *string `json:"name,omitempty"`
-	Body                   *string `json:"body,omitempty"`
-	State                  *string `json:"state,omitempty"`
-	OrganizationPermission *string `json:"organization_permission,omitempty"`
-	Private                *bool   `json:"private,omitempty"`
-}
-
 // ProjectV2ItemEvent is triggered when there is activity relating to an item on an organization-level project.
 // The Webhook event name is "projects_v2_item".
 //
@@ -1177,17 +1148,42 @@ type FieldValue struct {
 	To            json.RawMessage `json:"to,omitempty"`
 }
 
+// ProjectV2ItemFieldValue represents a field value of a project item.
+type ProjectV2ItemFieldValue struct {
+	ID       *int64 `json:"id,omitempty"`
+	Name     string `json:"name,omitempty"`
+	DataType string `json:"data_type,omitempty"`
+	// Value set for the field. The type depends on the field type:
+	//   - text: string
+	//   - number: float64
+	//   - date: string (ISO 8601 date format, e.g. "2023-06-23") or null
+	//   - single_select: object with "id", "name", "color", "description" fields or null
+	//   - iteration: object with "id", "title", "start_date", "duration" fields or null
+	//   - title: object with "text" field (read-only, reflects the item's title) or null
+	//   - assignees: array of user objects with "login", "id", etc. or null
+	//   - labels: array of label objects with "id", "name", "color", etc. or null
+	//   - linked_pull_requests: array of pull request objects or null
+	//   - milestone: milestone object with "id", "title", "description", etc. or null
+	//   - repository: repository object with "id", "name", "full_name", etc. or null
+	//   - reviewers: array of user objects or null
+	//   - status: object with "id", "name", "color", "description" fields (same structure as single_select) or null
+	Value any `json:"value,omitempty"`
+}
+
 // ProjectV2Item represents an item belonging to a project.
 type ProjectV2Item struct {
-	ID            *int64     `json:"id,omitempty"`
-	NodeID        *string    `json:"node_id,omitempty"`
-	ProjectNodeID *string    `json:"project_node_id,omitempty"`
-	ContentNodeID *string    `json:"content_node_id,omitempty"`
-	ContentType   *string    `json:"content_type,omitempty"`
-	Creator       *User      `json:"creator,omitempty"`
-	CreatedAt     *Timestamp `json:"created_at,omitempty"`
-	UpdatedAt     *Timestamp `json:"updated_at,omitempty"`
-	ArchivedAt    *Timestamp `json:"archived_at,omitempty"`
+	ID            *int64                     `json:"id,omitempty"`
+	NodeID        *string                    `json:"node_id,omitempty"`
+	ProjectNodeID *string                    `json:"project_node_id,omitempty"`
+	ContentNodeID *string                    `json:"content_node_id,omitempty"`
+	ProjectURL    *string                    `json:"project_url,omitempty"`
+	ContentType   *string                    `json:"content_type,omitempty"`
+	Creator       *User                      `json:"creator,omitempty"`
+	CreatedAt     *Timestamp                 `json:"created_at,omitempty"`
+	UpdatedAt     *Timestamp                 `json:"updated_at,omitempty"`
+	ArchivedAt    *Timestamp                 `json:"archived_at,omitempty"`
+	ItemURL       *string                    `json:"item_url,omitempty"`
+	Fields        []*ProjectV2ItemFieldValue `json:"fields,omitempty"`
 }
 
 // PublicEvent is triggered when a private repository is open sourced.
@@ -1237,7 +1233,8 @@ type PullRequestEvent struct {
 	Repo          *Repository   `json:"repository,omitempty"`
 	Sender        *User         `json:"sender,omitempty"`
 	Installation  *Installation `json:"installation,omitempty"`
-	Label         *Label        `json:"label,omitempty"` // Populated in "labeled" event deliveries.
+	Label         *Label        `json:"label,omitempty"`  // Populated in "labeled" event deliveries.
+	Reason        *string       `json:"reason,omitempty"` // Populated in "dequeued" event deliveries.
 
 	// The following field is only present when the webhook is triggered on
 	// a repository belonging to an organization.
@@ -1873,7 +1870,7 @@ type WatchEvent struct {
 }
 
 // WorkflowDispatchEvent is triggered when someone triggers a workflow run on GitHub or
-// sends a POST request to the create a workflow dispatch event endpoint.
+// sends a POST request to the endpoint to create a workflow dispatch event.
 //
 // GitHub API docs: https://docs.github.com/developers/webhooks-and-events/webhook-events-and-payloads#workflow_dispatch
 type WorkflowDispatchEvent struct {

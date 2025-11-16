@@ -8,7 +8,6 @@ package github
 import (
 	"context"
 	"fmt"
-	"net/http"
 )
 
 // ReactionsService provides access to the reactions-related functions in the
@@ -75,7 +74,6 @@ func (s *ReactionsService) ListCommentReactions(ctx context.Context, owner, repo
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	var m []*Reaction
@@ -104,7 +102,6 @@ func (s *ReactionsService) CreateCommentReaction(ctx context.Context, owner, rep
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	m := &Reaction{}
@@ -155,7 +152,6 @@ func (s *ReactionsService) ListIssueReactions(ctx context.Context, owner, repo s
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	var m []*Reaction
@@ -184,7 +180,6 @@ func (s *ReactionsService) CreateIssueReaction(ctx context.Context, owner, repo 
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	m := &Reaction{}
@@ -235,7 +230,6 @@ func (s *ReactionsService) ListIssueCommentReactions(ctx context.Context, owner,
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	var m []*Reaction
@@ -264,7 +258,6 @@ func (s *ReactionsService) CreateIssueCommentReaction(ctx context.Context, owner
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	m := &Reaction{}
@@ -315,7 +308,6 @@ func (s *ReactionsService) ListPullRequestCommentReactions(ctx context.Context, 
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	var m []*Reaction
@@ -344,7 +336,6 @@ func (s *ReactionsService) CreatePullRequestCommentReaction(ctx context.Context,
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	m := &Reaction{}
@@ -530,12 +521,11 @@ func (s *ReactionsService) DeleteTeamDiscussionCommentReactionByOrgIDAndTeamID(c
 }
 
 func (s *ReactionsService) deleteReaction(ctx context.Context, url string) (*Response, error) {
-	req, err := s.client.NewRequest(http.MethodDelete, url, nil)
+	req, err := s.client.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	return s.client.Do(ctx, req, nil)
@@ -586,7 +576,6 @@ func (s *ReactionsService) ListReleaseReactions(ctx context.Context, owner, repo
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeReactionsPreview)
 
 	var m []*Reaction

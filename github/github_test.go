@@ -96,7 +96,7 @@ func setup(t *testing.T) (client *Client, mux *http.ServeMux, serverURL string) 
 func openTestFile(t *testing.T, name, content string) *os.File {
 	t.Helper()
 	fname := filepath.Join(t.TempDir(), name)
-	err := os.WriteFile(fname, []byte(content), 0600)
+	err := os.WriteFile(fname, []byte(content), 0o600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +144,8 @@ func testURLParseError(t *testing.T, err error) {
 	if err == nil {
 		t.Error("Expected error to be returned")
 	}
-	if err, ok := err.(*url.Error); !ok || err.Op != "parse" {
+	var uerr *url.Error
+	if !errors.As(err, &uerr) || uerr.Op != "parse" {
 		t.Errorf("Expected URL parse error, got %+v", err)
 	}
 }
@@ -156,7 +157,7 @@ func testBody(t *testing.T, r *http.Request, want string) {
 		t.Errorf("Error reading request body: %v", err)
 	}
 	if got := string(b); got != want {
-		t.Errorf("request Body is %s, want %s", got, want)
+		t.Errorf("request Body is %v, want %v", got, want)
 	}
 }
 
@@ -182,7 +183,7 @@ func testJSONMarshal(t *testing.T, v any, want string) {
 	}
 
 	if diff := cmp.Diff(string(w), string(got)); diff != "" {
-		t.Errorf("json.Marshal returned:\n%s\nwant:\n%s\ndiff:\n%v", got, w, diff)
+		t.Errorf("json.Marshal returned:\n%v\nwant:\n%v\ndiff:\n%v", got, w, diff)
 	}
 }
 
@@ -192,7 +193,7 @@ func testAddURLOptions(t *testing.T, url string, v any, want string) {
 	t.Helper()
 
 	vt := reflect.Indirect(reflect.ValueOf(v)).Type()
-	for i := 0; i < vt.NumField(); i++ {
+	for i := range vt.NumField() {
 		field := vt.Field(i)
 		if alias, ok := field.Tag.Lookup("url"); ok {
 			if alias == "" {
@@ -279,14 +280,15 @@ func testErrorResponseForStatusCode(t *testing.T, code int) {
 		w.WriteHeader(code)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.Repositories.ListHooks(ctx, "o", "r", nil)
 
-	switch e := err.(type) {
-	case *ErrorResponse:
-	case *RateLimitError:
-	case *AbuseRateLimitError:
-		if code != e.Response.StatusCode {
+	var abuseErr *AbuseRateLimitError
+	switch {
+	case errors.As(err, new(*ErrorResponse)):
+	case errors.As(err, new(*RateLimitError)):
+	case errors.As(err, &abuseErr):
+		if code != abuseErr.Response.StatusCode {
 			t.Error("Error response does not contain status code")
 		}
 	default:
@@ -391,7 +393,27 @@ func TestWithAuthToken(t *testing.T) {
 
 	t.Run("NewTokenClient", func(t *testing.T) {
 		t.Parallel()
-		validate(t, NewTokenClient(context.Background(), token).Client(), token)
+		validate(t, NewTokenClient(t.Context(), token).Client(), token)
+	})
+
+	t.Run("do not set Authorization when empty token", func(t *testing.T) {
+		t.Parallel()
+		c := new(Client).WithAuthToken("")
+
+		gotReq := false
+		ifAuthorizationSet := false
+		srv := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+			gotReq = true
+			_, ifAuthorizationSet = r.Header["Authorization"]
+		}))
+		_, err := c.client.Get(srv.URL)
+		assertNilError(t, err)
+		if !gotReq {
+			t.Error("request not sent")
+		}
+		if ifAuthorizationSet {
+			t.Error("The header 'Authorization' must not be set")
+		}
 	})
 }
 
@@ -502,10 +524,10 @@ func TestWithEnterpriseURLs(t *testing.T) {
 					t.Fatalf("got unexpected error: %v", err)
 				}
 				if c.BaseURL.String() != test.wantBaseURL {
-					t.Errorf("BaseURL is %v, want %v", c.BaseURL.String(), test.wantBaseURL)
+					t.Errorf("BaseURL is %v, want %v", c.BaseURL, test.wantBaseURL)
 				}
 				if c.UploadURL.String() != test.wantUploadURL {
-					t.Errorf("UploadURL is %v, want %v", c.UploadURL.String(), test.wantUploadURL)
+					t.Errorf("UploadURL is %v, want %v", c.UploadURL, test.wantUploadURL)
 				}
 			}
 			validate(NewClient(nil).WithEnterpriseURLs(test.baseURL, test.uploadURL))
@@ -518,7 +540,7 @@ func TestWithEnterpriseURLs(t *testing.T) {
 // Ensure that length of Client.rateLimits is the same as number of fields in RateLimits struct.
 func TestClient_rateLimits(t *testing.T) {
 	t.Parallel()
-	if got, want := len(Client{}.rateLimits), reflect.TypeOf(RateLimits{}).NumField(); got != want {
+	if got, want := len(Client{}.rateLimits), reflect.TypeFor[RateLimits]().NumField(); got != want {
 		t.Errorf("len(Client{}.rateLimits) is %v, want %v", got, want)
 	}
 }
@@ -577,7 +599,7 @@ func TestNewRequest_invalidJSON(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	if err, ok := err.(*json.UnsupportedTypeError); !ok {
+	if !errors.As(err, new(*json.UnsupportedTypeError)) {
 		t.Errorf("Expected a JSON error; got %#v.", err)
 	}
 }
@@ -646,7 +668,7 @@ func TestNewRequest_errorForNoTrailingSlash(t *testing.T) {
 			t.Fatalf("url.Parse returned unexpected error: %v.", err)
 		}
 		c.BaseURL = u
-		if _, err := c.NewRequest(http.MethodGet, "test", nil); test.wantError && err == nil {
+		if _, err := c.NewRequest("GET", "test", nil); test.wantError && err == nil {
 			t.Fatal("Expected error to be returned.")
 		} else if !test.wantError && err != nil {
 			t.Fatalf("NewRequest returned unexpected error: %v.", err)
@@ -806,10 +828,11 @@ func TestResponse_populatePageValues(t *testing.T) {
 	t.Parallel()
 	r := http.Response{
 		Header: http.Header{
-			"Link": {`<https://api.github.com/?page=1>; rel="first",` +
-				` <https://api.github.com/?page=2>; rel="prev",` +
-				` <https://api.github.com/?page=4>; rel="next",` +
-				` <https://api.github.com/?page=5>; rel="last"`,
+			"Link": {
+				`<https://api.github.com/?page=1>; rel="first",` +
+					` <https://api.github.com/?page=2>; rel="prev",` +
+					` <https://api.github.com/?page=4>; rel="next",` +
+					` <https://api.github.com/?page=5>; rel="last"`,
 			},
 		},
 	}
@@ -836,10 +859,11 @@ func TestResponse_populateSinceValues(t *testing.T) {
 	t.Parallel()
 	r := http.Response{
 		Header: http.Header{
-			"Link": {`<https://api.github.com/?since=1>; rel="first",` +
-				` <https://api.github.com/?since=2>; rel="prev",` +
-				` <https://api.github.com/?since=4>; rel="next",` +
-				` <https://api.github.com/?since=5>; rel="last"`,
+			"Link": {
+				`<https://api.github.com/?since=1>; rel="first",` +
+					` <https://api.github.com/?since=2>; rel="prev",` +
+					` <https://api.github.com/?since=4>; rel="next",` +
+					` <https://api.github.com/?since=5>; rel="last"`,
 			},
 		},
 	}
@@ -866,10 +890,11 @@ func TestResponse_SinceWithPage(t *testing.T) {
 	t.Parallel()
 	r := http.Response{
 		Header: http.Header{
-			"Link": {`<https://api.github.com/?since=2021-12-04T10%3A43%3A42Z&page=1>; rel="first",` +
-				` <https://api.github.com/?since=2021-12-04T10%3A43%3A42Z&page=2>; rel="prev",` +
-				` <https://api.github.com/?since=2021-12-04T10%3A43%3A42Z&page=4>; rel="next",` +
-				` <https://api.github.com/?since=2021-12-04T10%3A43%3A42Z&page=5>; rel="last"`,
+			"Link": {
+				`<https://api.github.com/?since=2021-12-04T10%3A43%3A42Z&page=1>; rel="first",` +
+					` <https://api.github.com/?since=2021-12-04T10%3A43%3A42Z&page=2>; rel="prev",` +
+					` <https://api.github.com/?since=2021-12-04T10%3A43%3A42Z&page=4>; rel="next",` +
+					` <https://api.github.com/?since=2021-12-04T10%3A43%3A42Z&page=5>; rel="last"`,
 			},
 		},
 	}
@@ -937,9 +962,10 @@ func TestResponse_beforeAfterPagination(t *testing.T) {
 	t.Parallel()
 	r := http.Response{
 		Header: http.Header{
-			"Link": {`<https://api.github.com/?after=a1b2c3&before=>; rel="next",` +
-				` <https://api.github.com/?after=&before=>; rel="first",` +
-				` <https://api.github.com/?after=&before=d4e5f6>; rel="prev",`,
+			"Link": {
+				`<https://api.github.com/?after=a1b2c3&before=>; rel="next",` +
+					` <https://api.github.com/?after=&before=>; rel="first",` +
+					` <https://api.github.com/?after=&before=d4e5f6>; rel="prev",`,
 			},
 		},
 	}
@@ -972,11 +998,12 @@ func TestResponse_populatePageValues_invalid(t *testing.T) {
 	t.Parallel()
 	r := http.Response{
 		Header: http.Header{
-			"Link": {`<https://api.github.com/?page=1>,` +
-				`<https://api.github.com/?page=abc>; rel="first",` +
-				`https://api.github.com/?page=2; rel="prev",` +
-				`<https://api.github.com/>; rel="next",` +
-				`<https://api.github.com/?page=>; rel="last"`,
+			"Link": {
+				`<https://api.github.com/?page=1>,` +
+					`<https://api.github.com/?page=abc>; rel="first",` +
+					`https://api.github.com/?page=2; rel="prev",` +
+					`<https://api.github.com/>; rel="next",` +
+					`<https://api.github.com/?page=>; rel="last"`,
 			},
 		},
 	}
@@ -1012,11 +1039,12 @@ func TestResponse_populateSinceValues_invalid(t *testing.T) {
 	t.Parallel()
 	r := http.Response{
 		Header: http.Header{
-			"Link": {`<https://api.github.com/?since=1>,` +
-				`<https://api.github.com/?since=abc>; rel="first",` +
-				`https://api.github.com/?since=2; rel="prev",` +
-				`<https://api.github.com/>; rel="next",` +
-				`<https://api.github.com/?since=>; rel="last"`,
+			"Link": {
+				`<https://api.github.com/?since=1>,` +
+					`<https://api.github.com/?since=abc>; rel="first",` +
+					`https://api.github.com/?since=2; rel="prev",` +
+					`<https://api.github.com/>; rel="next",` +
+					`<https://api.github.com/?since=>; rel="last"`,
 			},
 		},
 	}
@@ -1063,7 +1091,7 @@ func TestDo(t *testing.T) {
 
 	req, _ := client.NewRequest("GET", ".", nil)
 	body := new(foo)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, body)
 	assertNilError(t, err)
 
@@ -1094,14 +1122,14 @@ func TestDo_httpError(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Do(ctx, req, nil)
 
 	if err == nil {
 		t.Fatal("Expected HTTP 400 error, got no error.")
 	}
 	if resp.StatusCode != 400 {
-		t.Errorf("Expected HTTP 400 error, got %d status code.", resp.StatusCode)
+		t.Errorf("Expected HTTP 400 error, got %v status code.", resp.StatusCode)
 	}
 }
 
@@ -1117,13 +1145,13 @@ func TestDo_redirectLoop(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	if err, ok := err.(*url.Error); !ok {
+	if !errors.As(err, new(*url.Error)) {
 		t.Errorf("Expected a URL error; got %#v.", err)
 	}
 }
@@ -1144,15 +1172,15 @@ func TestDo_preservesResponseInHTTPError(t *testing.T) {
 	req, _ := client.NewRequest("GET", ".", nil)
 	var resp *Response
 	var data any
-	resp, err := client.Do(context.Background(), req, &data)
+	resp, err := client.Do(t.Context(), req, &data)
 
 	if err == nil {
 		t.Fatal("Expected error response")
 	}
 
 	// Verify error type and access to status code
-	errResp, ok := err.(*ErrorResponse)
-	if !ok {
+	var errResp *ErrorResponse
+	if !errors.As(err, &errResp) {
 		t.Fatalf("Expected *ErrorResponse error, got %T", err)
 	}
 
@@ -1161,10 +1189,10 @@ func TestDo_preservesResponseInHTTPError(t *testing.T) {
 		t.Fatal("Expected response to be returned even with error")
 	}
 	if got, want := resp.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Response status = %d, want %d", got, want)
+		t.Errorf("Response status = %v, want %v", got, want)
 	}
 	if got, want := errResp.Response.StatusCode, http.StatusNotFound; got != want {
-		t.Errorf("Error response status = %d, want %d", got, want)
+		t.Errorf("Error response status = %v, want %v", got, want)
 	}
 
 	// Verify error contains proper message
@@ -1187,7 +1215,7 @@ func TestDo_sanitizeURL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewRequest returned unexpected error: %v", err)
 	}
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err = unauthedClient.Do(ctx, req, nil)
 	if err == nil {
 		t.Fatal("Expected error to be returned.")
@@ -1210,7 +1238,7 @@ func TestDo_rateLimit(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Do(ctx, req, nil)
 	if err != nil {
 		t.Errorf("Do returned unexpected error: %v", err)
@@ -1241,62 +1269,62 @@ func TestDo_rateLimitCategory(t *testing.T) {
 		category RateLimitCategory
 	}{
 		{
-			method:   http.MethodGet,
+			method:   "GET",
 			url:      "/",
 			category: CoreCategory,
 		},
 		{
-			method:   http.MethodGet,
+			method:   "GET",
 			url:      "/search/issues?q=rate",
 			category: SearchCategory,
 		},
 		{
-			method:   http.MethodGet,
+			method:   "GET",
 			url:      "/graphql",
 			category: GraphqlCategory,
 		},
 		{
-			method:   http.MethodPost,
+			method:   "POST",
 			url:      "/app-manifests/code/conversions",
 			category: IntegrationManifestCategory,
 		},
 		{
-			method:   http.MethodGet,
+			method:   "GET",
 			url:      "/app-manifests/code/conversions",
 			category: CoreCategory, // only POST requests are in the integration manifest category
 		},
 		{
-			method:   http.MethodPut,
+			method:   "PUT",
 			url:      "/repos/google/go-github/import",
 			category: SourceImportCategory,
 		},
 		{
-			method:   http.MethodGet,
+			method:   "GET",
 			url:      "/repos/google/go-github/import",
 			category: CoreCategory, // only PUT requests are in the source import category
 		},
 		{
-			method:   http.MethodPost,
+			method:   "POST",
 			url:      "/repos/google/go-github/code-scanning/sarifs",
 			category: CodeScanningUploadCategory,
 		},
 		{
-			method:   http.MethodGet,
+			method:   "GET",
 			url:      "/scim/v2/organizations/ORG/Users",
 			category: ScimCategory,
 		},
 		{
-			method:   http.MethodPost,
+			method:   "POST",
 			url:      "/repos/google/go-github/dependency-graph/snapshots",
 			category: DependencySnapshotsCategory,
 		},
 		{
-			method:   http.MethodGet,
+			method:   "GET",
 			url:      "/search/code?q=rate",
 			category: CodeSearchCategory,
 		},
 		{
-			method:   http.MethodGet,
+			method:   "GET",
 			url:      "/orgs/google/audit-log",
 			category: AuditLogCategory,
 		},
@@ -1325,12 +1353,12 @@ func TestDo_rateLimit_errorResponse(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Do(ctx, req, nil)
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	if _, ok := err.(*RateLimitError); ok {
+	if errors.As(err, new(*RateLimitError)) {
 		t.Errorf("Did not expect a *RateLimitError error; got %#v.", err)
 	}
 	if got, want := resp.Rate.Limit, 60; got != want {
@@ -1371,14 +1399,14 @@ func TestDo_rateLimit_rateLimitError(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	rateLimitErr, ok := err.(*RateLimitError)
-	if !ok {
+	var rateLimitErr *RateLimitError
+	if !errors.As(err, &rateLimitErr) {
 		t.Fatalf("Expected a *RateLimitError error; got %#v.", err)
 	}
 	if got, want := rateLimitErr.Rate.Limit, 60; got != want {
@@ -1427,7 +1455,7 @@ func TestDo_rateLimit_noNetworkCall(t *testing.T) {
 
 	// First request is made, and it makes the client aware of rate reset time being in the future.
 	req, _ := client.NewRequest("GET", "first", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 	if err == nil {
 		t.Error("Expected error to be returned.")
@@ -1444,8 +1472,8 @@ func TestDo_rateLimit_noNetworkCall(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	rateLimitErr, ok := err.(*RateLimitError)
-	if !ok {
+	var rateLimitErr *RateLimitError
+	if !errors.As(err, &rateLimitErr) {
 		t.Fatalf("Expected a *RateLimitError error; got %#v.", err)
 	}
 	if got, want := rateLimitErr.Rate.Limit, 60; got != want {
@@ -1495,7 +1523,7 @@ func TestDo_rateLimit_ignoredFromCache(t *testing.T) {
 
 	// First request is made so afterwards we can check the returned rate limit headers were ignored.
 	req, _ := client.NewRequest("GET", "first", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 	if err == nil {
 		t.Error("Expected error to be returned.")
@@ -1504,7 +1532,6 @@ func TestDo_rateLimit_ignoredFromCache(t *testing.T) {
 	// Second request should not by hindered by rate limits.
 	req, _ = client.NewRequest("GET", "second", nil)
 	_, err = client.Do(ctx, req, nil)
-
 	if err != nil {
 		t.Fatalf("Second request failed, even though the rate limits from the cache should've been ignored: %v", err)
 	}
@@ -1520,7 +1547,7 @@ func TestDo_rateLimit_sleepUntilResponseResetLimit(t *testing.T) {
 
 	reset := time.Now().UTC().Add(time.Second)
 
-	var firstRequest = true
+	firstRequest := true
 	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		if firstRequest {
 			firstRequest = false
@@ -1548,7 +1575,7 @@ func TestDo_rateLimit_sleepUntilResponseResetLimit(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Do(context.WithValue(ctx, SleepUntilPrimaryRateLimitResetWhenRateLimited, true), req, nil)
 	if err != nil {
 		t.Errorf("Do returned unexpected error: %v", err)
@@ -1582,13 +1609,13 @@ func TestDo_rateLimit_sleepUntilResponseResetLimitRetryOnce(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(context.WithValue(ctx, SleepUntilPrimaryRateLimitResetWhenRateLimited, true), req, nil)
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
 	if got, want := requestCount, 2; got != want {
-		t.Errorf("Expected 2 requests, got %d", got)
+		t.Errorf("Expected 2 requests, got %v", got)
 	}
 }
 
@@ -1612,7 +1639,7 @@ func TestDo_rateLimit_sleepUntilClientResetLimit(t *testing.T) {
 		fmt.Fprintln(w, `{}`)
 	})
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Do(context.WithValue(ctx, SleepUntilPrimaryRateLimitResetWhenRateLimited, true), req, nil)
 	if err != nil {
 		t.Errorf("Do returned unexpected error: %v", err)
@@ -1621,7 +1648,7 @@ func TestDo_rateLimit_sleepUntilClientResetLimit(t *testing.T) {
 		t.Errorf("Response status code = %v, want %v", got, want)
 	}
 	if got, want := requestCount, 1; got != want {
-		t.Errorf("Expected 1 request, got %d", got)
+		t.Errorf("Expected 1 request, got %v", got)
 	}
 }
 
@@ -1649,14 +1676,14 @@ func TestDo_rateLimit_abortSleepContextCancelled(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Millisecond)
 	defer cancel()
 	_, err := client.Do(context.WithValue(ctx, SleepUntilPrimaryRateLimitResetWhenRateLimited, true), req, nil)
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Error("Expected context deadline exceeded error.")
 	}
 	if got, want := requestCount, 1; got != want {
-		t.Errorf("Expected 1 requests, got %d", got)
+		t.Errorf("Expected 1 requests, got %v", got)
 	}
 }
 
@@ -1680,18 +1707,18 @@ func TestDo_rateLimit_abortSleepContextCancelledClientLimit(t *testing.T) {
 		fmt.Fprintln(w, `{}`)
 	})
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Millisecond)
 	defer cancel()
 	_, err := client.Do(context.WithValue(ctx, SleepUntilPrimaryRateLimitResetWhenRateLimited, true), req, nil)
-	rateLimitError, ok := err.(*RateLimitError)
-	if !ok {
+	var rateLimitError *RateLimitError
+	if !errors.As(err, &rateLimitError) {
 		t.Fatalf("Expected a *rateLimitError error; got %#v.", err)
 	}
 	if got, wantSuffix := rateLimitError.Message, "Context cancelled while waiting for rate limit to reset until"; !strings.HasPrefix(got, wantSuffix) {
 		t.Errorf("Expected request to be prevented because context cancellation, got: %v.", got)
 	}
 	if got, want := requestCount, 0; got != want {
-		t.Errorf("Expected 1 requests, got %d", got)
+		t.Errorf("Expected 1 requests, got %v", got)
 	}
 }
 
@@ -1713,14 +1740,14 @@ func TestDo_rateLimit_abuseRateLimitError(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	abuseRateLimitErr, ok := err.(*AbuseRateLimitError)
-	if !ok {
+	var abuseRateLimitErr *AbuseRateLimitError
+	if !errors.As(err, &abuseRateLimitErr) {
 		t.Fatalf("Expected a *AbuseRateLimitError error; got %#v.", err)
 	}
 	if got, want := abuseRateLimitErr.RetryAfter, (*time.Duration)(nil); got != want {
@@ -1748,14 +1775,14 @@ func TestDo_rateLimit_abuseRateLimitErrorEnterprise(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	abuseRateLimitErr, ok := err.(*AbuseRateLimitError)
-	if !ok {
+	var abuseRateLimitErr *AbuseRateLimitError
+	if !errors.As(err, &abuseRateLimitErr) {
 		t.Fatalf("Expected a *AbuseRateLimitError error; got %#v.", err)
 	}
 	if got, want := abuseRateLimitErr.RetryAfter, (*time.Duration)(nil); got != want {
@@ -1779,14 +1806,14 @@ func TestDo_rateLimit_abuseRateLimitError_retryAfter(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	abuseRateLimitErr, ok := err.(*AbuseRateLimitError)
-	if !ok {
+	var abuseRateLimitErr *AbuseRateLimitError
+	if !errors.As(err, &abuseRateLimitErr) {
 		t.Fatalf("Expected a *AbuseRateLimitError error; got %#v.", err)
 	}
 	if abuseRateLimitErr.RetryAfter == nil {
@@ -1800,8 +1827,7 @@ func TestDo_rateLimit_abuseRateLimitError_retryAfter(t *testing.T) {
 	if _, err = client.Do(ctx, req, nil); err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	abuseRateLimitErr, ok = err.(*AbuseRateLimitError)
-	if !ok {
+	if !errors.As(err, &abuseRateLimitErr) {
 		t.Fatalf("Expected a *AbuseRateLimitError error; got %#v.", err)
 	}
 	if abuseRateLimitErr.RetryAfter == nil {
@@ -1836,14 +1862,14 @@ func TestDo_rateLimit_abuseRateLimitError_xRateLimitReset(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	abuseRateLimitErr, ok := err.(*AbuseRateLimitError)
-	if !ok {
+	var abuseRateLimitErr *AbuseRateLimitError
+	if !errors.As(err, &abuseRateLimitErr) {
 		t.Fatalf("Expected a *AbuseRateLimitError error; got %#v.", err)
 	}
 	if abuseRateLimitErr.RetryAfter == nil {
@@ -1858,8 +1884,7 @@ func TestDo_rateLimit_abuseRateLimitError_xRateLimitReset(t *testing.T) {
 	if _, err = client.Do(ctx, req, nil); err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	abuseRateLimitErr, ok = err.(*AbuseRateLimitError)
-	if !ok {
+	if !errors.As(err, &abuseRateLimitErr) {
 		t.Fatalf("Expected a *AbuseRateLimitError error; got %#v.", err)
 	}
 	if abuseRateLimitErr.RetryAfter == nil {
@@ -1896,14 +1921,14 @@ func TestDo_rateLimit_abuseRateLimitError_maxDuration(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, nil)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	abuseRateLimitErr, ok := err.(*AbuseRateLimitError)
-	if !ok {
+	var abuseRateLimitErr *AbuseRateLimitError
+	if !errors.As(err, &abuseRateLimitErr) {
 		t.Fatalf("Expected a *AbuseRateLimitError error; got %#v.", err)
 	}
 	if abuseRateLimitErr.RetryAfter == nil {
@@ -1936,7 +1961,7 @@ func TestDo_rateLimit_disableRateLimitCheck(t *testing.T) {
 		fmt.Fprintln(w, `{}`)
 	})
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Do(ctx, req, nil)
 	if err != nil {
 		t.Errorf("Do returned unexpected error: %v", err)
@@ -1945,10 +1970,10 @@ func TestDo_rateLimit_disableRateLimitCheck(t *testing.T) {
 		t.Errorf("Response status code = %v, want %v", got, want)
 	}
 	if got, want := requestCount, 1; got != want {
-		t.Errorf("Expected 1 request, got %d", got)
+		t.Errorf("Expected 1 request, got %v", got)
 	}
 	if got, want := client.rateLimits[CoreCategory].Remaining, 0; got != want {
-		t.Errorf("Expected 0 requests remaining, got %d", got)
+		t.Errorf("Expected 0 requests remaining, got %v", got)
 	}
 }
 
@@ -1972,7 +1997,7 @@ func TestDo_rateLimit_bypassRateLimitCheck(t *testing.T) {
 		fmt.Fprintln(w, `{}`)
 	})
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Do(context.WithValue(ctx, BypassRateLimitCheck, true), req, nil)
 	if err != nil {
 		t.Errorf("Do returned unexpected error: %v", err)
@@ -1981,10 +2006,10 @@ func TestDo_rateLimit_bypassRateLimitCheck(t *testing.T) {
 		t.Errorf("Response status code = %v, want %v", got, want)
 	}
 	if got, want := requestCount, 1; got != want {
-		t.Errorf("Expected 1 request, got %d", got)
+		t.Errorf("Expected 1 request, got %v", got)
 	}
 	if got, want := client.rateLimits[CoreCategory].Remaining, 5000; got != want {
-		t.Errorf("Expected 5000 requests remaining, got %d", got)
+		t.Errorf("Expected 5000 requests remaining, got %v", got)
 	}
 }
 
@@ -1999,7 +2024,7 @@ func TestDo_noContent(t *testing.T) {
 	var body json.RawMessage
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Do(ctx, req, &body)
 	if err != nil {
 		t.Fatalf("Do returned unexpected error: %v", err)
@@ -2015,14 +2040,13 @@ func TestBareDoUntilFound_redirectLoop(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.bareDoUntilFound(ctx, req, 1)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	var rerr *RedirectionError
-	if !errors.As(err, &rerr) {
+	if !errors.As(err, new(*RedirectionError)) {
 		t.Errorf("Expected a Redirection error; got %#v.", err)
 	}
 }
@@ -2036,14 +2060,13 @@ func TestBareDoUntilFound_UnexpectedRedirection(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, _, err := client.bareDoUntilFound(ctx, req, 1)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
 	}
-	var rerr *RedirectionError
-	if !errors.As(err, &rerr) {
+	if !errors.As(err, new(*RedirectionError)) {
 		t.Errorf("Expected a Redirection error; got %#v.", err)
 	}
 }
@@ -2077,7 +2100,8 @@ func TestCheckResponse(t *testing.T) {
 			"errors": [{"resource": "r", "field": "f", "code": "c"}],
 			"block": {"reason": "dmca", "created_at": "2016-03-17T15:39:46Z"}}`)),
 	}
-	err := CheckResponse(res).(*ErrorResponse)
+	var err *ErrorResponse
+	errors.As(CheckResponse(res), &err)
 
 	if err == nil {
 		t.Error("Expected error response.")
@@ -2112,7 +2136,8 @@ func TestCheckResponse_RateLimit(t *testing.T) {
 	res.Header.Set(headerRateReset, "243424")
 	res.Header.Set(headerRateResource, "core")
 
-	err := CheckResponse(res).(*RateLimitError)
+	var err *RateLimitError
+	errors.As(CheckResponse(res), &err)
 
 	if err == nil {
 		t.Error("Expected error response.")
@@ -2136,7 +2161,8 @@ func TestCheckResponse_AbuseRateLimit(t *testing.T) {
 		Body: io.NopCloser(strings.NewReader(`{"message":"m",
 			"documentation_url": "docs.github.com/en/rest/overview/resources-in-the-rest-api#abuse-rate-limits"}`)),
 	}
-	err := CheckResponse(res).(*AbuseRateLimitError)
+	var err *AbuseRateLimitError
+	errors.As(CheckResponse(res), &err)
 
 	if err == nil {
 		t.Error("Expected error response.")
@@ -2162,7 +2188,8 @@ func TestCheckResponse_RedirectionError(t *testing.T) {
 		Body:       io.NopCloser(strings.NewReader(``)),
 	}
 	res.Header.Set("Location", urlStr)
-	err := CheckResponse(res).(*RedirectionError)
+	var err *RedirectionError
+	errors.As(CheckResponse(res), &err)
 
 	if err == nil {
 		t.Error("Expected error response.")
@@ -2571,7 +2598,8 @@ func TestCheckResponse_noBody(t *testing.T) {
 		StatusCode: http.StatusBadRequest,
 		Body:       io.NopCloser(strings.NewReader("")),
 	}
-	err := CheckResponse(res).(*ErrorResponse)
+	var err *ErrorResponse
+	errors.As(CheckResponse(res), &err)
 
 	if err == nil {
 		t.Error("Expected error response.")
@@ -2593,7 +2621,8 @@ func TestCheckResponse_unexpectedErrorStructure(t *testing.T) {
 		StatusCode: http.StatusBadRequest,
 		Body:       io.NopCloser(strings.NewReader(httpBody)),
 	}
-	err := CheckResponse(res).(*ErrorResponse)
+	var err *ErrorResponse
+	errors.As(CheckResponse(res), &err)
 
 	if err == nil {
 		t.Error("Expected error response.")
@@ -2697,11 +2726,11 @@ func TestSetCredentialsAsHeaders(t *testing.T) {
 	}
 
 	if actualID != id {
-		t.Errorf("id is %s, want %s", actualID, id)
+		t.Errorf("id is %v, want %v", actualID, id)
 	}
 
 	if actualSecret != secret {
-		t.Errorf("secret is %s, want %s", actualSecret, secret)
+		t.Errorf("secret is %v, want %v", actualSecret, secret)
 	}
 }
 
@@ -2730,7 +2759,7 @@ func TestUnauthenticatedRateLimitedTransport(t *testing.T) {
 	unauthedClient := NewClient(tp.Client())
 	unauthedClient.BaseURL = client.BaseURL
 	req, _ := unauthedClient.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := unauthedClient.Do(ctx, req, nil)
 	assertNilError(t, err)
 }
@@ -2808,7 +2837,7 @@ func TestBasicAuthTransport(t *testing.T) {
 	basicAuthClient := NewClient(tp.Client())
 	basicAuthClient.BaseURL = client.BaseURL
 	req, _ := basicAuthClient.NewRequest("GET", ".", nil)
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := basicAuthClient.Do(ctx, req, nil)
 	assertNilError(t, err)
 }
@@ -2961,7 +2990,7 @@ func TestBareDo_returnsOpenBody(t *testing.T) {
 		fmt.Fprint(w, expectedBody)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	req, err := client.NewRequest("GET", "test-url", nil)
 	if err != nil {
 		t.Fatalf("client.NewRequest returned error: %v", err)
@@ -3152,7 +3181,7 @@ func TestClientCopy_leak_transport(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		accessToken := r.Header.Get("Authorization")
-		_, _ = fmt.Fprintf(w, `{"login": "%s"}`, accessToken)
+		_, _ = fmt.Fprintf(w, `{"login": "%v"}`, accessToken)
 	}))
 	clientPreconfiguredWithURLs, err := NewClient(nil).WithEnterpriseURLs(srv.URL, srv.URL)
 	if err != nil {
@@ -3162,14 +3191,14 @@ func TestClientCopy_leak_transport(t *testing.T) {
 	aliceClient := clientPreconfiguredWithURLs.WithAuthToken("alice")
 	bobClient := clientPreconfiguredWithURLs.WithAuthToken("bob")
 
-	alice, _, err := aliceClient.Users.Get(context.Background(), "")
+	alice, _, err := aliceClient.Users.Get(t.Context(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assertNoDiff(t, "Bearer alice", alice.GetLogin())
 
-	bob, _, err := bobClient.Users.Get(context.Background(), "")
+	bob, _, err := bobClient.Users.Get(t.Context(), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3181,7 +3210,7 @@ func TestPtr(t *testing.T) {
 	t.Parallel()
 	equal := func(t *testing.T, want, got any) {
 		t.Helper()
-		if !reflect.DeepEqual(want, got) {
+		if !cmp.Equal(want, got) {
 			t.Errorf("want %#v, got %#v", want, got)
 		}
 	}

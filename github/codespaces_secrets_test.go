@@ -83,7 +83,7 @@ func TestCodespacesService_ListSecrets(t *testing.T) {
 
 			tt.handleFunc(mux)
 
-			ctx := context.Background()
+			ctx := t.Context()
 			secrets, _, err := tt.call(ctx, client)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)
@@ -92,8 +92,8 @@ func TestCodespacesService_ListSecrets(t *testing.T) {
 			want := &Secrets{
 				TotalCount: 4,
 				Secrets: []*Secret{
-					{Name: "A", CreatedAt: Timestamp{time.Date(2019, time.January, 02, 15, 04, 05, 0, time.UTC)}, UpdatedAt: Timestamp{time.Date(2020, time.January, 02, 15, 04, 05, 0, time.UTC)}},
-					{Name: "B", CreatedAt: Timestamp{time.Date(2019, time.January, 02, 15, 04, 05, 0, time.UTC)}, UpdatedAt: Timestamp{time.Date(2020, time.January, 02, 15, 04, 05, 0, time.UTC)}},
+					{Name: "A", CreatedAt: Timestamp{time.Date(2019, time.January, 2, 15, 4, 5, 0, time.UTC)}, UpdatedAt: Timestamp{time.Date(2020, time.January, 2, 15, 4, 5, 0, time.UTC)}},
+					{Name: "B", CreatedAt: Timestamp{time.Date(2019, time.January, 2, 15, 4, 5, 0, time.UTC)}, UpdatedAt: Timestamp{time.Date(2020, time.January, 2, 15, 4, 5, 0, time.UTC)}},
 				},
 			}
 			if !cmp.Equal(secrets, want) {
@@ -182,13 +182,13 @@ func TestCodespacesService_GetSecret(t *testing.T) {
 
 			tt.handleFunc(mux)
 
-			ctx := context.Background()
+			ctx := t.Context()
 			secret, _, err := tt.call(ctx, client)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)
 			}
 
-			want := &Secret{Name: "A", CreatedAt: Timestamp{time.Date(2019, time.January, 02, 15, 04, 05, 0, time.UTC)}, UpdatedAt: Timestamp{time.Date(2020, time.January, 02, 15, 04, 05, 0, time.UTC)}}
+			want := &Secret{Name: "A", CreatedAt: Timestamp{time.Date(2019, time.January, 2, 15, 4, 5, 0, time.UTC)}, UpdatedAt: Timestamp{time.Date(2020, time.January, 2, 15, 4, 5, 0, time.UTC)}}
 			if !cmp.Equal(secret, want) {
 				t.Errorf("Codespaces.%v returned %+v, want %+v", tt.methodName, secret, want)
 			}
@@ -289,7 +289,7 @@ func TestCodespacesService_CreateOrUpdateSecret(t *testing.T) {
 				EncryptedValue: "QIv=",
 				KeyID:          "1234",
 			}
-			ctx := context.Background()
+			ctx := t.Context()
 			_, err := tt.call(ctx, client, input)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)
@@ -370,7 +370,7 @@ func TestCodespacesService_DeleteSecret(t *testing.T) {
 
 			tt.handleFunc(mux)
 
-			ctx := context.Background()
+			ctx := t.Context()
 			_, err := tt.call(ctx, client)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)
@@ -455,7 +455,7 @@ func TestCodespacesService_GetPublicKey(t *testing.T) {
 
 			tt.handleFunc(mux)
 
-			ctx := context.Background()
+			ctx := t.Context()
 			key, _, err := tt.call(ctx, client)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)
@@ -533,7 +533,7 @@ func TestCodespacesService_ListSelectedReposForSecret(t *testing.T) {
 
 			tt.handleFunc(mux)
 
-			ctx := context.Background()
+			ctx := t.Context()
 			repos, _, err := tt.call(ctx, client)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)
@@ -619,7 +619,7 @@ func TestCodespacesService_SetSelectedReposForSecret(t *testing.T) {
 
 			tt.handleFunc(mux)
 
-			ctx := context.Background()
+			ctx := t.Context()
 			_, err := tt.call(ctx, client)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)
@@ -689,7 +689,7 @@ func TestCodespacesService_AddSelectedReposForSecret(t *testing.T) {
 
 			tt.handleFunc(mux)
 
-			ctx := context.Background()
+			ctx := t.Context()
 			_, err := tt.call(ctx, client)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)
@@ -759,7 +759,7 @@ func TestCodespacesService_RemoveSelectedReposFromSecret(t *testing.T) {
 
 			tt.handleFunc(mux)
 
-			ctx := context.Background()
+			ctx := t.Context()
 			_, err := tt.call(ctx, client)
 			if err != nil {
 				t.Errorf("Codespaces.%v returned error: %v", tt.methodName, err)

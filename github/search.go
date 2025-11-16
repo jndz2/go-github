@@ -311,7 +311,7 @@ func (s *SearchService) search(ctx context.Context, searchType string, parameter
 		params.Set("repository_id", strconv.FormatInt(*parameters.RepositoryID, 10))
 	}
 	params.Set("q", parameters.Query)
-	u := fmt.Sprintf("search/%s?%s", searchType, params.Encode())
+	u := fmt.Sprintf("search/%v?%v", searchType, params.Encode())
 
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
@@ -321,19 +321,15 @@ func (s *SearchService) search(ctx context.Context, searchType string, parameter
 	switch searchType {
 	case "commits":
 		// Accept header for search commits preview endpoint
-		// TODO: remove custom Accept header when this API fully launches.
 		acceptHeaders = append(acceptHeaders, mediaTypeCommitSearchPreview)
 	case "topics":
 		// Accept header for search repositories based on topics preview endpoint
-		// TODO: remove custom Accept header when this API fully launches.
 		acceptHeaders = append(acceptHeaders, mediaTypeTopicsPreview)
 	case "repositories":
 		// Accept header for search repositories based on topics preview endpoint
-		// TODO: remove custom Accept header when this API fully launches.
 		acceptHeaders = append(acceptHeaders, mediaTypeTopicsPreview)
 	case "issues":
 		// Accept header for search issues based on reactions preview endpoint
-		// TODO: remove custom Accept header when this API fully launches.
 		acceptHeaders = append(acceptHeaders, mediaTypeReactionsPreview)
 	}
 	// https://docs.github.com/rest/search#search-repositories

@@ -6,7 +6,6 @@
 package github
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -68,7 +67,7 @@ func TestCodeScanningService_UploadSarif(t *testing.T) {
 		v := new(SarifAnalysis)
 		assertNilError(t, json.NewDecoder(r.Body).Decode(v))
 		testMethod(t, r, "POST")
-		want := &SarifAnalysis{CommitSHA: Ptr("abc"), Ref: Ptr("ref/head/main"), Sarif: Ptr("abc"), CheckoutURI: Ptr("uri"), StartedAt: &Timestamp{time.Date(2006, time.January, 02, 15, 04, 05, 0, time.UTC)}, ToolName: Ptr("codeql-cli")}
+		want := &SarifAnalysis{CommitSHA: Ptr("abc"), Ref: Ptr("ref/head/main"), Sarif: Ptr("abc"), CheckoutURI: Ptr("uri"), StartedAt: &Timestamp{time.Date(2006, time.January, 2, 15, 4, 5, 0, time.UTC)}, ToolName: Ptr("codeql-cli")}
 		if !cmp.Equal(v, want) {
 			t.Errorf("Request body = %+v, want %+v", v, want)
 		}
@@ -78,8 +77,8 @@ func TestCodeScanningService_UploadSarif(t *testing.T) {
 		_, _ = w.Write(respBody)
 	})
 
-	ctx := context.Background()
-	sarifAnalysis := &SarifAnalysis{CommitSHA: Ptr("abc"), Ref: Ptr("ref/head/main"), Sarif: Ptr("abc"), CheckoutURI: Ptr("uri"), StartedAt: &Timestamp{time.Date(2006, time.January, 02, 15, 04, 05, 0, time.UTC)}, ToolName: Ptr("codeql-cli")}
+	ctx := t.Context()
+	sarifAnalysis := &SarifAnalysis{CommitSHA: Ptr("abc"), Ref: Ptr("ref/head/main"), Sarif: Ptr("abc"), CheckoutURI: Ptr("uri"), StartedAt: &Timestamp{time.Date(2006, time.January, 2, 15, 4, 5, 0, time.UTC)}, ToolName: Ptr("codeql-cli")}
 	respSarifID, _, err := client.CodeScanning.UploadSarif(ctx, "o", "r", sarifAnalysis)
 	if err != nil {
 		t.Errorf("CodeScanning.UploadSarif returned error: %v", err)
@@ -112,7 +111,7 @@ func TestCodeScanningService_GetSARIF(t *testing.T) {
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	sarifUpload, _, err := client.CodeScanning.GetSARIF(ctx, "o", "r", "abc")
 	if err != nil {
 		t.Errorf("CodeScanning.GetSARIF returned error: %v", err)
@@ -240,13 +239,13 @@ func TestCodeScanningService_ListAlertsForOrg(t *testing.T) {
 	})
 
 	opts := &AlertListOptions{State: "open", Ref: "heads/master", Severity: "warning", ToolName: "CodeQL", ToolGUID: "guid", Direction: "asc", Sort: "updated"}
-	ctx := context.Background()
+	ctx := t.Context()
 	alerts, _, err := client.CodeScanning.ListAlertsForOrg(ctx, "o", opts)
 	if err != nil {
 		t.Errorf("CodeScanning.ListAlertsForOrg returned error: %v", err)
 	}
 
-	date := Timestamp{time.Date(2020, time.May, 06, 12, 00, 00, 0, time.UTC)}
+	date := Timestamp{time.Date(2020, time.May, 6, 12, 0, 0, 0, time.UTC)}
 	want := []*Alert{
 		{
 			Repository: &Repository{
@@ -402,13 +401,13 @@ func TestCodeScanningService_ListAlertsForOrgLisCursorOptions(t *testing.T) {
 	})
 
 	opts := &AlertListOptions{State: "open", Ref: "heads/master", Severity: "warning", ToolName: "CodeQL", ListCursorOptions: ListCursorOptions{PerPage: 1, Before: "deadbeefb", After: "deadbeefa"}}
-	ctx := context.Background()
+	ctx := t.Context()
 	alerts, _, err := client.CodeScanning.ListAlertsForOrg(ctx, "o", opts)
 	if err != nil {
 		t.Errorf("CodeScanning.ListAlertsForOrg returned error: %v", err)
 	}
 
-	date := Timestamp{time.Date(2020, time.May, 06, 12, 00, 00, 0, time.UTC)}
+	date := Timestamp{time.Date(2020, time.May, 6, 12, 0, 0, 0, time.UTC)}
 	want := []*Alert{
 		{
 			Repository: &Repository{
@@ -565,13 +564,13 @@ func TestCodeScanningService_ListAlertsForRepo(t *testing.T) {
 	})
 
 	opts := &AlertListOptions{State: "open", Ref: "heads/master", Severity: "warning", ToolName: "CodeQL", ToolGUID: "guid", Direction: "asc", Sort: "updated"}
-	ctx := context.Background()
+	ctx := t.Context()
 	alerts, _, err := client.CodeScanning.ListAlertsForRepo(ctx, "o", "r", opts)
 	if err != nil {
 		t.Errorf("CodeScanning.ListAlertsForRepo returned error: %v", err)
 	}
 
-	date := Timestamp{time.Date(2020, time.May, 06, 12, 00, 00, 0, time.UTC)}
+	date := Timestamp{time.Date(2020, time.May, 6, 12, 0, 0, 0, time.UTC)}
 	want := []*Alert{
 		{
 			RuleID:          Ptr("js/trivial-conditional"),
@@ -715,7 +714,7 @@ func TestCodeScanningService_UpdateAlert(t *testing.T) {
 				"html_url":"https://github.com/o/r/security/code-scanning/88"}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	dismissedComment := Ptr("This alert is not actually correct as sanitizer is used")
 	dismissedReason := Ptr("false positive")
 	state := Ptr("dismissed")
@@ -725,7 +724,7 @@ func TestCodeScanningService_UpdateAlert(t *testing.T) {
 		t.Errorf("CodeScanning.UpdateAlert returned error: %v", err)
 	}
 
-	date := Timestamp{time.Date(2019, time.January, 02, 15, 04, 05, 0, time.UTC)}
+	date := Timestamp{time.Date(2019, time.January, 2, 15, 4, 5, 0, time.UTC)}
 	want := &Alert{
 		RuleID:          Ptr("js/useless-expression"),
 		RuleSeverity:    Ptr("warning"),
@@ -816,7 +815,7 @@ func TestCodeScanningService_ListAlertInstances(t *testing.T) {
 	})
 
 	opts := &AlertInstancesListOptions{Ref: "heads/main", ListOptions: ListOptions{Page: 1}}
-	ctx := context.Background()
+	ctx := t.Context()
 	instances, _, err := client.CodeScanning.ListAlertInstances(ctx, "o", "r", 88, opts)
 	if err != nil {
 		t.Errorf("CodeScanning.ListAlertInstances returned error: %v", err)
@@ -912,13 +911,13 @@ func TestCodeScanningService_GetAlert(t *testing.T) {
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	alert, _, err := client.CodeScanning.GetAlert(ctx, "o", "r", 88)
 	if err != nil {
 		t.Errorf("CodeScanning.GetAlert returned error: %v", err)
 	}
 
-	date := Timestamp{time.Date(2019, time.January, 02, 15, 04, 05, 0, time.UTC)}
+	date := Timestamp{time.Date(2019, time.January, 2, 15, 4, 5, 0, time.UTC)}
 	want := &Alert{
 		RuleID:          Ptr("js/useless-expression"),
 		RuleSeverity:    Ptr("warning"),
@@ -1171,13 +1170,13 @@ func TestCodeScanningService_ListAnalysesForRepo(t *testing.T) {
 	})
 
 	opts := &AnalysesListOptions{SarifID: Ptr("8981cd8e-b078-4ac3-a3be-1dad7dbd0b582"), Ref: Ptr("heads/master")}
-	ctx := context.Background()
+	ctx := t.Context()
 	analyses, _, err := client.CodeScanning.ListAnalysesForRepo(ctx, "o", "r", opts)
 	if err != nil {
 		t.Errorf("CodeScanning.ListAnalysesForRepo returned error: %v", err)
 	}
 
-	date := &Timestamp{time.Date(2020, time.August, 27, 15, 05, 21, 0, time.UTC)}
+	date := &Timestamp{time.Date(2020, time.August, 27, 15, 5, 21, 0, time.UTC)}
 	want := []*ScanningAnalysis{
 		{
 			ID:           Ptr(int64(201)),
@@ -1270,7 +1269,7 @@ func TestCodeScanningService_GetAnalysis(t *testing.T) {
 			}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	analysis, _, err := client.CodeScanning.GetAnalysis(ctx, "o", "r", 3602840)
 	if err != nil {
 		t.Errorf("CodeScanning.GetAnalysis returned error: %v", err)
@@ -1329,7 +1328,7 @@ func TestCodeScanningService_DeleteAnalysis(t *testing.T) {
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	analysis, _, err := client.CodeScanning.DeleteAnalysis(ctx, "o", "r", 40)
 	if err != nil {
 		t.Errorf("CodeScanning.DeleteAnalysis returned error: %v", err)
@@ -1398,7 +1397,7 @@ func TestCodeScanningService_ListCodeQLDatabases(t *testing.T) {
 		]`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	databases, _, err := client.CodeScanning.ListCodeQLDatabases(ctx, "o", "r")
 	if err != nil {
 		t.Errorf("CodeScanning.ListCodeQLDatabases returned error: %v", err)
@@ -1495,7 +1494,7 @@ func TestCodeScanningService_GetCodeQLDatabase(t *testing.T) {
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	database, _, err := client.CodeScanning.GetCodeQLDatabase(ctx, "o", "r", "lang")
 	if err != nil {
 		t.Errorf("CodeScanning.GetCodeQLDatabase returned error: %v", err)
@@ -1573,13 +1572,13 @@ func TestCodeScanningService_GetDefaultSetupConfiguration(t *testing.T) {
 		}
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	cfg, _, err := client.CodeScanning.GetDefaultSetupConfiguration(ctx, "o", "r")
 	if err != nil {
 		t.Errorf("CodeScanning.GetDefaultSetupConfiguration returned error: %v", err)
 	}
 
-	date := &Timestamp{time.Date(2006, time.January, 02, 15, 04, 05, 0, time.UTC)}
+	date := &Timestamp{time.Date(2006, time.January, 2, 15, 4, 5, 0, time.UTC)}
 	want := &DefaultSetupConfiguration{
 		State:      Ptr("configured"),
 		Languages:  []string{"javascript", "javascript-typescript", "typescript"},
@@ -1620,7 +1619,7 @@ func TestCodeScanningService_UpdateDefaultSetupConfiguration(t *testing.T) {
 		}
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	options := &UpdateDefaultSetupConfigurationOptions{
 		State:      "configured",
 		Languages:  []string{"go"},

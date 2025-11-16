@@ -196,7 +196,6 @@ func (s *RepositoriesService) UpdatePagesGHES(ctx context.Context, owner, repo s
 	u := fmt.Sprintf("repos/%v/%v/pages", owner, repo)
 
 	req, err := s.client.NewRequest("PUT", u, opts)
-
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +219,6 @@ func (s *RepositoriesService) DisablePages(ctx context.Context, owner, repo stri
 		return nil, err
 	}
 
-	// TODO: remove custom Accept header when this API fully launches.
 	req.Header.Set("Accept", mediaTypeEnablePagesAPIPreview)
 
 	return s.client.Do(ctx, req, nil)

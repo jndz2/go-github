@@ -13,6 +13,23 @@ import (
 	"testing"
 )
 
+func TestAcceptedAssignment_String(t *testing.T) {
+	t.Parallel()
+	v := AcceptedAssignment{
+		ID:          Ptr(int64(0)),
+		Submitted:   Ptr(false),
+		Passing:     Ptr(false),
+		CommitCount: Ptr(0),
+		Grade:       Ptr(""),
+		Repository:  &Repository{},
+		Assignment:  &ClassroomAssignment{},
+	}
+	want := `github.AcceptedAssignment{ID:0, Submitted:false, Passing:false, CommitCount:0, Grade:"", Repository:github.Repository{}, Assignment:github.ClassroomAssignment{}}`
+	if got := v.String(); got != want {
+		t.Errorf("AcceptedAssignment.String = %v, want %v", got, want)
+	}
+}
+
 func TestActionsAllowed_String(t *testing.T) {
 	t.Parallel()
 	v := ActionsAllowed{
@@ -32,8 +49,9 @@ func TestActionsPermissions_String(t *testing.T) {
 		EnabledRepositories: Ptr(""),
 		AllowedActions:      Ptr(""),
 		SelectedActionsURL:  Ptr(""),
+		SHAPinningRequired:  Ptr(false),
 	}
-	want := `github.ActionsPermissions{EnabledRepositories:"", AllowedActions:"", SelectedActionsURL:""}`
+	want := `github.ActionsPermissions{EnabledRepositories:"", AllowedActions:"", SelectedActionsURL:"", SHAPinningRequired:false}`
 	if got := v.String(); got != want {
 		t.Errorf("ActionsPermissions.String = %v, want %v", got, want)
 	}
@@ -58,8 +76,9 @@ func TestActionsPermissionsRepository_String(t *testing.T) {
 		Enabled:            Ptr(false),
 		AllowedActions:     Ptr(""),
 		SelectedActionsURL: Ptr(""),
+		SHAPinningRequired: Ptr(false),
 	}
-	want := `github.ActionsPermissionsRepository{Enabled:false, AllowedActions:"", SelectedActionsURL:""}`
+	want := `github.ActionsPermissionsRepository{Enabled:false, AllowedActions:"", SelectedActionsURL:"", SHAPinningRequired:false}`
 	if got := v.String(); got != want {
 		t.Errorf("ActionsPermissionsRepository.String = %v, want %v", got, want)
 	}
@@ -105,6 +124,27 @@ func TestArtifactPeriod_String(t *testing.T) {
 	want := `github.ArtifactPeriod{Days:0, MaximumAllowedDays:0}`
 	if got := v.String(); got != want {
 		t.Errorf("ArtifactPeriod.String = %v, want %v", got, want)
+	}
+}
+
+func TestAssignmentGrade_String(t *testing.T) {
+	t.Parallel()
+	v := AssignmentGrade{
+		AssignmentName:        Ptr(""),
+		AssignmentURL:         Ptr(""),
+		StarterCodeURL:        Ptr(""),
+		GithubUsername:        Ptr(""),
+		RosterIdentifier:      Ptr(""),
+		StudentRepositoryName: Ptr(""),
+		StudentRepositoryURL:  Ptr(""),
+		SubmissionTimestamp:   &Timestamp{},
+		PointsAwarded:         Ptr(0),
+		PointsAvailable:       Ptr(0),
+		GroupName:             Ptr(""),
+	}
+	want := `github.AssignmentGrade{AssignmentName:"", AssignmentURL:"", StarterCodeURL:"", GithubUsername:"", RosterIdentifier:"", StudentRepositoryName:"", StudentRepositoryURL:"", SubmissionTimestamp:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, PointsAwarded:0, PointsAvailable:0, GroupName:""}`
+	if got := v.String(); got != want {
+		t.Errorf("AssignmentGrade.String = %v, want %v", got, want)
 	}
 }
 
@@ -272,6 +312,20 @@ func TestClassroomAssignment_String(t *testing.T) {
 	}
 }
 
+func TestClassroomUser_String(t *testing.T) {
+	t.Parallel()
+	v := ClassroomUser{
+		ID:        Ptr(int64(0)),
+		Login:     Ptr(""),
+		AvatarURL: Ptr(""),
+		HTMLURL:   Ptr(""),
+	}
+	want := `github.ClassroomUser{ID:0, Login:"", AvatarURL:"", HTMLURL:""}`
+	if got := v.String(); got != want {
+		t.Errorf("ClassroomUser.String = %v, want %v", got, want)
+	}
+}
+
 func TestCodeOfConduct_String(t *testing.T) {
 	t.Parallel()
 	v := CodeOfConduct{
@@ -417,6 +471,17 @@ func TestCommitsComparison_String(t *testing.T) {
 	want := `github.CommitsComparison{BaseCommit:github.RepositoryCommit{}, MergeBaseCommit:github.RepositoryCommit{}, Status:"", AheadBy:0, BehindBy:0, TotalCommits:0, HTMLURL:"", PermalinkURL:"", DiffURL:"", PatchURL:"", URL:""}`
 	if got := v.String(); got != want {
 		t.Errorf("CommitsComparison.String = %v, want %v", got, want)
+	}
+}
+
+func TestContributorApprovalPermissions_String(t *testing.T) {
+	t.Parallel()
+	v := ContributorApprovalPermissions{
+		ApprovalPolicy: "",
+	}
+	want := `github.ContributorApprovalPermissions{ApprovalPolicy:""}`
+	if got := v.String(); got != want {
+		t.Errorf("ContributorApprovalPermissions.String = %v, want %v", got, want)
 	}
 }
 
@@ -795,6 +860,7 @@ func TestInstallation_String(t *testing.T) {
 	v := Installation{
 		ID:                     Ptr(int64(0)),
 		NodeID:                 Ptr(""),
+		ClientID:               Ptr(""),
 		AppID:                  Ptr(int64(0)),
 		AppSlug:                Ptr(""),
 		TargetID:               Ptr(int64(0)),
@@ -814,7 +880,7 @@ func TestInstallation_String(t *testing.T) {
 		SuspendedBy:            &User{},
 		SuspendedAt:            &Timestamp{},
 	}
-	want := `github.Installation{ID:0, NodeID:"", AppID:0, AppSlug:"", TargetID:0, Account:github.User{}, AccessTokensURL:"", RepositoriesURL:"", HTMLURL:"", TargetType:"", SingleFileName:"", RepositorySelection:"", Events:[""], SingleFilePaths:[""], Permissions:github.InstallationPermissions{}, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, UpdatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, HasMultipleSingleFiles:false, SuspendedBy:github.User{}, SuspendedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}}`
+	want := `github.Installation{ID:0, NodeID:"", ClientID:"", AppID:0, AppSlug:"", TargetID:0, Account:github.User{}, AccessTokensURL:"", RepositoriesURL:"", HTMLURL:"", TargetType:"", SingleFileName:"", RepositorySelection:"", Events:[""], SingleFilePaths:[""], Permissions:github.InstallationPermissions{}, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, UpdatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, HasMultipleSingleFiles:false, SuspendedBy:github.User{}, SuspendedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}}`
 	if got := v.String(); got != want {
 		t.Errorf("Installation.String = %v, want %v", got, want)
 	}
@@ -1476,6 +1542,39 @@ func TestPreReceiveHook_String(t *testing.T) {
 	}
 }
 
+func TestProjectV2_String(t *testing.T) {
+	t.Parallel()
+	v := ProjectV2{
+		ID:                     Ptr(int64(0)),
+		NodeID:                 Ptr(""),
+		Owner:                  &User{},
+		Creator:                &User{},
+		Title:                  Ptr(""),
+		Description:            Ptr(""),
+		Public:                 Ptr(false),
+		ClosedAt:               &Timestamp{},
+		CreatedAt:              &Timestamp{},
+		UpdatedAt:              &Timestamp{},
+		DeletedAt:              &Timestamp{},
+		Number:                 Ptr(0),
+		ShortDescription:       Ptr(""),
+		DeletedBy:              &User{},
+		URL:                    Ptr(""),
+		HTMLURL:                Ptr(""),
+		ColumnsURL:             Ptr(""),
+		OwnerURL:               Ptr(""),
+		Name:                   Ptr(""),
+		Body:                   Ptr(""),
+		State:                  Ptr(""),
+		OrganizationPermission: Ptr(""),
+		Private:                Ptr(false),
+	}
+	want := `github.ProjectV2{ID:0, NodeID:"", Owner:github.User{}, Creator:github.User{}, Title:"", Description:"", Public:false, ClosedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, UpdatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, DeletedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, Number:0, ShortDescription:"", DeletedBy:github.User{}, URL:"", HTMLURL:"", ColumnsURL:"", OwnerURL:"", Name:"", Body:"", State:"", OrganizationPermission:"", Private:false}`
+	if got := v.String(); got != want {
+		t.Errorf("ProjectV2.String = %v, want %v", got, want)
+	}
+}
+
 func TestPullRequest_String(t *testing.T) {
 	t.Parallel()
 	v := PullRequest{
@@ -2017,8 +2116,9 @@ func TestRepositoryRelease_String(t *testing.T) {
 		TarballURL:             Ptr(""),
 		Author:                 &User{},
 		NodeID:                 Ptr(""),
+		Immutable:              Ptr(false),
 	}
-	want := `github.RepositoryRelease{TagName:"", TargetCommitish:"", Name:"", Body:"", Draft:false, Prerelease:false, MakeLatest:"", DiscussionCategoryName:"", GenerateReleaseNotes:false, ID:0, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, PublishedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, URL:"", HTMLURL:"", AssetsURL:"", UploadURL:"", ZipballURL:"", TarballURL:"", Author:github.User{}, NodeID:""}`
+	want := `github.RepositoryRelease{TagName:"", TargetCommitish:"", Name:"", Body:"", Draft:false, Prerelease:false, MakeLatest:"", DiscussionCategoryName:"", GenerateReleaseNotes:false, ID:0, CreatedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, PublishedAt:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, URL:"", HTMLURL:"", AssetsURL:"", UploadURL:"", ZipballURL:"", TarballURL:"", Author:github.User{}, NodeID:"", Immutable:false}`
 	if got := v.String(); got != want {
 		t.Errorf("RepositoryRelease.String = %v, want %v", got, want)
 	}
@@ -2380,5 +2480,19 @@ func TestWeeklyStats_String(t *testing.T) {
 	want := `github.WeeklyStats{Week:github.Timestamp{0001-01-01 00:00:00 +0000 UTC}, Additions:0, Deletions:0, Commits:0}`
 	if got := v.String(); got != want {
 		t.Errorf("WeeklyStats.String = %v, want %v", got, want)
+	}
+}
+
+func TestWorkflowsPermissions_String(t *testing.T) {
+	t.Parallel()
+	v := WorkflowsPermissions{
+		RunWorkflowsFromForkPullRequests:  Ptr(false),
+		SendWriteTokensToWorkflows:        Ptr(false),
+		SendSecretsAndVariables:           Ptr(false),
+		RequireApprovalForForkPRWorkflows: Ptr(false),
+	}
+	want := `github.WorkflowsPermissions{RunWorkflowsFromForkPullRequests:false, SendWriteTokensToWorkflows:false, SendSecretsAndVariables:false, RequireApprovalForForkPRWorkflows:false}`
+	if got := v.String(); got != want {
+		t.Errorf("WorkflowsPermissions.String = %v, want %v", got, want)
 	}
 }

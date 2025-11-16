@@ -6,7 +6,6 @@
 package github
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -33,7 +32,7 @@ func TestSearchService_Repositories(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "forks", Order: "desc", ListOptions: ListOptions{Page: 2, PerPage: 2}}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Repositories(ctx, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Repositories returned error: %v", err)
@@ -53,7 +52,7 @@ func TestSearchService_Repositories_coverage(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const methodName = "Repositories"
 	testBadOptions(t, methodName, func() (err error) {
@@ -116,7 +115,7 @@ func TestSearchService_RepositoriesTextMatch(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "forks", Order: "desc", ListOptions: ListOptions{Page: 2, PerPage: 2}, TextMatch: true}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Repositories(ctx, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Code returned error: %v", err)
@@ -124,10 +123,11 @@ func TestSearchService_RepositoriesTextMatch(t *testing.T) {
 
 	wantedRepoResult := &Repository{
 		Name: Ptr("gopher1"),
-		TextMatches: []*TextMatch{{
-			Fragment: Ptr("I'm afraid my friend what you have found\nIs a gopher who lives to feed"),
-			Matches:  []*Match{{Text: Ptr("gopher"), Indices: []int{14, 21}}},
-		},
+		TextMatches: []*TextMatch{
+			{
+				Fragment: Ptr("I'm afraid my friend what you have found\nIs a gopher who lives to feed"),
+				Matches:  []*Match{{Text: Ptr("gopher"), Indices: []int{14, 21}}},
+			},
 		},
 	}
 
@@ -157,7 +157,7 @@ func TestSearchService_Topics(t *testing.T) {
 	})
 
 	opts := &SearchOptions{ListOptions: ListOptions{Page: 2, PerPage: 2}}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Topics(ctx, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Topics returned error: %v", err)
@@ -177,7 +177,7 @@ func TestSearchService_Topics_coverage(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const methodName = "Topics"
 	testBadOptions(t, methodName, func() (err error) {
@@ -202,7 +202,7 @@ func TestSearchService_Commits(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "author-date", Order: "desc"}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Commits(ctx, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Commits returned error: %v", err)
@@ -222,7 +222,7 @@ func TestSearchService_Commits_coverage(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const methodName = "Commits"
 	testBadOptions(t, methodName, func() (err error) {
@@ -249,7 +249,7 @@ func TestSearchService_Issues(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "forks", Order: "desc", ListOptions: ListOptions{Page: 2, PerPage: 2}}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Issues(ctx, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Issues returned error: %v", err)
@@ -269,7 +269,7 @@ func TestSearchService_Issues_coverage(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const methodName = "Issues"
 	testBadOptions(t, methodName, func() (err error) {
@@ -296,7 +296,7 @@ func TestSearchService_Issues_withQualifiersNoOpts(t *testing.T) {
 	})
 
 	opts := &SearchOptions{}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Issues(ctx, q, opts)
 	if err != nil {
 		t.Errorf("Search.Issues returned error: %v", err)
@@ -335,7 +335,7 @@ func TestSearchService_Issues_withQualifiersAndOpts(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "forks"}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Issues(ctx, q, opts)
 	if err != nil {
 		t.Errorf("Search.Issues returned error: %v", err)
@@ -373,7 +373,7 @@ func TestSearchService_Users(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "forks", Order: "desc", ListOptions: ListOptions{Page: 2, PerPage: 2}}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Users(ctx, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Issues returned error: %v", err)
@@ -393,7 +393,7 @@ func TestSearchService_Users_coverage(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const methodName = "Users"
 	testBadOptions(t, methodName, func() (err error) {
@@ -420,7 +420,7 @@ func TestSearchService_Code(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "forks", Order: "desc", ListOptions: ListOptions{Page: 2, PerPage: 2}}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Code(ctx, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Code returned error: %v", err)
@@ -440,7 +440,7 @@ func TestSearchService_Code_coverage(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const methodName = "Code"
 	testBadOptions(t, methodName, func() (err error) {
@@ -486,7 +486,7 @@ func TestSearchService_CodeTextMatch(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "forks", Order: "desc", ListOptions: ListOptions{Page: 2, PerPage: 2}, TextMatch: true}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Code(ctx, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Code returned error: %v", err)
@@ -494,10 +494,11 @@ func TestSearchService_CodeTextMatch(t *testing.T) {
 
 	wantedCodeResult := &CodeResult{
 		Name: Ptr("gopher1"),
-		TextMatches: []*TextMatch{{
-			Fragment: Ptr("I'm afraid my friend what you have found\nIs a gopher who lives to feed"),
-			Matches:  []*Match{{Text: Ptr("gopher"), Indices: []int{14, 21}}},
-		},
+		TextMatches: []*TextMatch{
+			{
+				Fragment: Ptr("I'm afraid my friend what you have found\nIs a gopher who lives to feed"),
+				Matches:  []*Match{{Text: Ptr("gopher"), Indices: []int{14, 21}}},
+			},
 		},
 	}
 
@@ -530,7 +531,7 @@ func TestSearchService_Labels(t *testing.T) {
 	})
 
 	opts := &SearchOptions{Sort: "updated", Order: "desc", ListOptions: ListOptions{Page: 2, PerPage: 2}}
-	ctx := context.Background()
+	ctx := t.Context()
 	result, _, err := client.Search.Labels(ctx, 1234, "blah", opts)
 	if err != nil {
 		t.Errorf("Search.Code returned error: %v", err)
@@ -553,7 +554,7 @@ func TestSearchService_Labels_coverage(t *testing.T) {
 	t.Parallel()
 	client, _, _ := setup(t)
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	const methodName = "Labels"
 	testBadOptions(t, methodName, func() (err error) {

@@ -13,7 +13,7 @@
 //
 // Note, if you want to push a single file, you probably prefer to use the
 // content API. An example is available here:
-// https://pkg.go.dev/github.com/google/go-github/v74/github#example-RepositoriesService-CreateFile
+// https://pkg.go.dev/github.com/google/go-github/v79/github#example-RepositoriesService-CreateFile
 //
 // Note, for this to work at least 1 commit is needed, so you if you use this
 // after creating a repository you might want to make sure you set `AutoInit` to
@@ -33,7 +33,7 @@ import (
 	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
-	"github.com/google/go-github/v74/github"
+	"github.com/google/go-github/v79/github"
 )
 
 var (
@@ -57,8 +57,10 @@ Example: README.md,main.go:github/examples/commitpr/main.go`)
 	privateKey  = flag.String("private-key", "", "Path to the private key to use to sign the commit.")
 )
 
-var client *github.Client
-var ctx = context.Background()
+var (
+	client *github.Client
+	ctx    = context.Background()
+)
 
 // getRef returns the commit branch reference object if it exists or creates it
 // from the base branch before returning it.
@@ -98,7 +100,7 @@ func getTree(ref *github.Reference) (tree *github.Tree, err error) {
 	entries := []*github.TreeEntry{}
 
 	// Load each file into the tree.
-	for _, fileArg := range strings.Split(*sourceFiles, ",") {
+	for fileArg := range strings.SplitSeq(*sourceFiles, ",") {
 		file, content, err := getFileContent(fileArg)
 		if err != nil {
 			return nil, err
@@ -176,14 +178,14 @@ func pushCommit(ref *github.Reference, tree *github.Tree) (err error) {
 	return err
 }
 
-// createPR creates a pull request. Based on: https://pkg.go.dev/github.com/google/go-github/v74/github#example-PullRequestsService-Create
+// createPR creates a pull request. Based on: https://pkg.go.dev/github.com/google/go-github/v79/github#example-PullRequestsService-Create
 func createPR() (err error) {
 	if *prSubject == "" {
 		return errors.New("missing `-pr-title` flag; skipping PR creation")
 	}
 
 	if *prRepoOwner != "" && *prRepoOwner != *sourceOwner {
-		*commitBranch = fmt.Sprintf("%s:%s", *sourceOwner, *commitBranch)
+		*commitBranch = fmt.Sprintf("%v:%v", *sourceOwner, *commitBranch)
 	} else {
 		prRepoOwner = sourceOwner
 	}
@@ -206,7 +208,7 @@ func createPR() (err error) {
 		return err
 	}
 
-	fmt.Printf("PR created: %s\n", pr.GetHTMLURL())
+	fmt.Printf("PR created: %v\n", pr.GetHTMLURL())
 	return nil
 }
 
@@ -223,7 +225,7 @@ func main() {
 
 	ref, err := getRef()
 	if err != nil {
-		log.Fatalf("Unable to get/create the commit reference: %s\n", err)
+		log.Fatalf("Unable to get/create the commit reference: %v\n", err)
 	}
 	if ref == nil {
 		log.Fatal("No error where returned but the reference is nil")
@@ -231,14 +233,14 @@ func main() {
 
 	tree, err := getTree(ref)
 	if err != nil {
-		log.Fatalf("Unable to create the tree based on the provided files: %s\n", err)
+		log.Fatalf("Unable to create the tree based on the provided files: %v\n", err)
 	}
 
 	if err := pushCommit(ref, tree); err != nil {
-		log.Fatalf("Unable to create the commit: %s\n", err)
+		log.Fatalf("Unable to create the commit: %v\n", err)
 	}
 
 	if err := createPR(); err != nil {
-		log.Fatalf("Error while creating the pull request: %s", err)
+		log.Fatalf("Error while creating the pull request: %v", err)
 	}
 }

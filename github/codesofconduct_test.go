@@ -6,7 +6,6 @@
 package github
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -28,7 +27,7 @@ func TestCodesOfConductService_List(t *testing.T) {
 						]`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	cs, _, err := client.ListCodesOfConduct(ctx)
 	assertNilError(t, err)
 
@@ -37,7 +36,8 @@ func TestCodesOfConductService_List(t *testing.T) {
 			Key:  Ptr("key"),
 			Name: Ptr("name"),
 			URL:  Ptr("url"),
-		}}
+		},
+	}
 	if !cmp.Equal(want, cs) {
 		t.Errorf("returned %+v, want %+v", cs, want)
 	}
@@ -67,7 +67,7 @@ func TestCodesOfConductService_Get(t *testing.T) {
 		)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	coc, _, err := client.GetCodeOfConduct(ctx, "k")
 	assertNilError(t, err)
 

@@ -100,7 +100,7 @@ type Organization struct {
 	// MembersCanDeleteRepositories toggles whether members with admin permissions can delete a repository.
 	MembersCanDeleteRepositories *bool `json:"members_can_delete_repositories,omitempty"`
 	// MembersCanChangeRepoVisibility toggles whether members with admin permissions can change the visibility for a repository.
-	MembersCanChangeRepoVisibility *bool `json:"members_can_change_repo_visiblilty,omitempty"`
+	MembersCanChangeRepoVisibility *bool `json:"members_can_change_repo_visibility,omitempty"`
 	// MembersCanInviteOutsideCollaborators toggles whether members with admin permissions can invite outside collaborators.
 	MembersCanInviteOutsideCollaborators *bool `json:"members_can_invite_outside_collaborators,omitempty"`
 	// MembersCanDeleteIssues toggles whether members with admin permissions can delete issues.
@@ -236,7 +236,6 @@ func (s *OrganizationsService) Get(ctx context.Context, org string) (*Organizati
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept header when this API fully launches.
 	req.Header.Set("Accept", mediaTypeMemberAllowedRepoCreationTypePreview)
 
 	organization := new(Organization)
@@ -254,7 +253,7 @@ func (s *OrganizationsService) Get(ctx context.Context, org string) (*Organizati
 //
 //meta:operation GET /organizations/{organization_id}
 func (s *OrganizationsService) GetByID(ctx context.Context, id int64) (*Organization, *Response, error) {
-	u := fmt.Sprintf("organizations/%d", id)
+	u := fmt.Sprintf("organizations/%v", id)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, nil, err
@@ -281,7 +280,6 @@ func (s *OrganizationsService) Edit(ctx context.Context, name string, org *Organ
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept header when this API fully launches.
 	req.Header.Set("Accept", mediaTypeMemberAllowedRepoCreationTypePreview)
 
 	o := new(Organization)

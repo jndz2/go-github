@@ -168,6 +168,7 @@ type InstallationRequest struct {
 type Installation struct {
 	ID                     *int64                   `json:"id,omitempty"`
 	NodeID                 *string                  `json:"node_id,omitempty"`
+	ClientID               *string                  `json:"client_id,omitempty"`
 	AppID                  *int64                   `json:"app_id,omitempty"`
 	AppSlug                *string                  `json:"app_slug,omitempty"`
 	TargetID               *int64                   `json:"target_id,omitempty"`
@@ -433,7 +434,6 @@ func (s *AppsService) CreateAttachment(ctx context.Context, contentReferenceID i
 		return nil, nil, err
 	}
 
-	// TODO: remove custom Accept headers when APIs fully launch.
 	req.Header.Set("Accept", mediaTypeContentAttachmentsPreview)
 
 	m := &Attachment{}
@@ -469,7 +469,7 @@ func (s *AppsService) FindRepositoryInstallation(ctx context.Context, owner, rep
 //
 //meta:operation GET /repositories/{repository_id}/installation
 func (s *AppsService) FindRepositoryInstallationByID(ctx context.Context, id int64) (*Installation, *Response, error) {
-	return s.getInstallation(ctx, fmt.Sprintf("repositories/%d/installation", id))
+	return s.getInstallation(ctx, fmt.Sprintf("repositories/%v/installation", id))
 }
 
 // FindUserInstallation finds the user's installation information.

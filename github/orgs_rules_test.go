@@ -6,7 +6,6 @@
 package github
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -37,7 +36,7 @@ func TestOrganizationsService_GetAllRepositoryRulesets(t *testing.T) {
 		}]`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	rulesets, _, err := client.Organizations.GetAllRepositoryRulesets(ctx, "o", nil)
 	if err != nil {
 		t.Errorf("Organizations.GetAllRepositoryRulesets returned error: %v", err)
@@ -85,7 +84,7 @@ func TestOrganizationsService_GetAllRepositoryRulesets_ListOptions(t *testing.T)
 	})
 
 	opts := &ListOptions{Page: 2, PerPage: 35}
-	ctx := context.Background()
+	ctx := t.Context()
 	rulesets, _, err := client.Organizations.GetAllRepositoryRulesets(ctx, "o", opts)
 	if err != nil {
 		t.Errorf("Organizations.GetAllRepositoryRulesets returned error: %v", err)
@@ -130,6 +129,11 @@ func TestOrganizationsService_CreateRepositoryRuleset_RepoNames(t *testing.T) {
 			  {
 				"actor_id": 234,
 				"actor_type": "Team"
+			  },
+			  {
+			  	"actor_id": 345,
+				"actor_type": "Team",
+				"bypass_mode": "exempt"
 			  }
 			],
 			"conditions": {
@@ -264,7 +268,7 @@ func TestOrganizationsService_CreateRepositoryRuleset_RepoNames(t *testing.T) {
 		  }`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	ruleset, _, err := client.Organizations.CreateRepositoryRuleset(ctx, "o", RepositoryRuleset{
 		Name:        "ruleset",
 		Target:      Ptr(RulesetTargetBranch),
@@ -273,6 +277,11 @@ func TestOrganizationsService_CreateRepositoryRuleset_RepoNames(t *testing.T) {
 			{
 				ActorID:   Ptr(int64(234)),
 				ActorType: Ptr(BypassActorTypeTeam),
+			},
+			{
+				ActorID:    Ptr(int64(345)),
+				ActorType:  Ptr(BypassActorTypeTeam),
+				BypassMode: Ptr(BypassModeExempt),
 			},
 		},
 		Conditions: &RepositoryRulesetConditions{
@@ -370,6 +379,11 @@ func TestOrganizationsService_CreateRepositoryRuleset_RepoNames(t *testing.T) {
 			{
 				ActorID:   Ptr(int64(234)),
 				ActorType: Ptr(BypassActorTypeTeam),
+			},
+			{
+				ActorID:    Ptr(int64(345)),
+				ActorType:  Ptr(BypassActorTypeTeam),
+				BypassMode: Ptr(BypassModeExempt),
 			},
 		},
 		Conditions: &RepositoryRulesetConditions{
@@ -618,7 +632,7 @@ func TestOrganizationsService_CreateRepositoryRuleset_RepoProperty(t *testing.T)
 		  }`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	ruleset, _, err := client.Organizations.CreateRepositoryRuleset(ctx, "o", RepositoryRuleset{
 		Name:        "ruleset",
 		Target:      Ptr(RulesetTargetBranch),
@@ -977,7 +991,7 @@ func TestOrganizationsService_CreateRepositoryRuleset_RepoIDs(t *testing.T) {
 		  }`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	ruleset, _, err := client.Organizations.CreateRepositoryRuleset(ctx, "o", RepositoryRuleset{
 		Name:        "ruleset",
 		Target:      Ptr(RulesetTargetBranch),
@@ -1225,7 +1239,7 @@ func TestOrganizationsService_GetRepositoryRuleset(t *testing.T) {
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	rulesets, _, err := client.Organizations.GetRepositoryRuleset(ctx, "o", 21)
 	if err != nil {
 		t.Errorf("Organizations.GetOrganizationRepositoryRuleset returned error: %v", err)
@@ -1312,7 +1326,7 @@ func TestOrganizationsService_GetRepositoryRulesetWithRepoPropCondition(t *testi
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	rulesets, _, err := client.Organizations.GetRepositoryRuleset(ctx, "o", 21)
 	if err != nil {
 		t.Errorf("Organizations.GetOrganizationRepositoryRuleset returned error: %v", err)
@@ -1407,7 +1421,7 @@ func TestOrganizationsService_UpdateRepositoryRuleset(t *testing.T) {
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	rulesets, _, err := client.Organizations.UpdateRepositoryRuleset(ctx, "o", 21, RepositoryRuleset{
 		Name:        "test ruleset",
 		Target:      Ptr(RulesetTargetBranch),
@@ -1510,7 +1524,7 @@ func TestOrganizationsService_UpdateRepositoryRulesetWithRepoProp(t *testing.T) 
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	rulesets, _, err := client.Organizations.UpdateRepositoryRuleset(ctx, "o", 21, RepositoryRuleset{
 		Name:        "test ruleset",
 		Target:      Ptr(RulesetTargetBranch),
@@ -1579,6 +1593,7 @@ func TestOrganizationsService_UpdateRepositoryRulesetClearBypassActor(t *testing
 
 	mux.HandleFunc("/orgs/o/rulesets/21", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
+		testBody(t, r, `{"bypass_actors":[]}`+"\n")
 		fmt.Fprint(w, `{
 			"id": 21,
 			"name": "test ruleset",
@@ -1616,7 +1631,7 @@ func TestOrganizationsService_UpdateRepositoryRulesetClearBypassActor(t *testing
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	_, err := client.Organizations.UpdateRepositoryRulesetClearBypassActor(ctx, "o", 21)
 	if err != nil {
@@ -1638,7 +1653,7 @@ func TestOrganizationsService_DeleteRepositoryRuleset(t *testing.T) {
 		testMethod(t, r, "DELETE")
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Organizations.DeleteRepositoryRuleset(ctx, "o", 21)
 	if err != nil {
 		t.Errorf("Organizations.DeleteRepositoryRuleset returned error: %v", err)

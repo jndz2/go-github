@@ -92,7 +92,7 @@ file.
 
 ## Code Comments
 
-Every exported method needs to have code comments that follow
+Every exported method and type needs to have code comments that follow
 [Go Doc Comments][]. A typical method's comments will look like this:
 
 ```go
@@ -102,9 +102,20 @@ Every exported method needs to have code comments that follow
 //
 //meta:operation GET /repos/{owner}/{repo}
 func (s *RepositoriesService) Get(ctx context.Context, owner, repo string) (*Repository, *Response, error) {
-u := fmt.Sprintf("repos/%v/%v", owner, repo)
-req, err := s.client.NewRequest("GET", u, nil)
-...
+    u := fmt.Sprintf("repos/%v/%v", owner, repo)
+    req, err := s.client.NewRequest("GET", u, nil)
+    ...
+}
+```
+And the returned type `Repository` will have comments like this:
+
+```go
+// Repository represents a GitHub repository.
+type Repository struct {
+    ID     *int64  `json:"id,omitempty"`
+    NodeID *string `json:"node_id,omitempty"`
+    Owner  *User   `json:"owner,omitempty"`
+    ...
 }
 ```
 
@@ -169,6 +180,11 @@ may be useful to know what it is. Its sections are:
 
 - `operation_overrides` - is where we override the documentation_url for 
   operations where the link in the OpenAPI descriptions is wrong.
+
+Please note that if your PR unit tests are failing due to an out-of-date
+`openapi_operations.yaml` file, simply ask the maintainer(s) of this repo
+to update it for you so that your PR doesn't need to include changes
+to this auto-generated file.
 
 ### tools/metadata
 

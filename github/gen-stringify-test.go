@@ -192,7 +192,7 @@ func (t *templateData) processAST(f *ast.File) error {
 			}
 			st, ok := ts.Type.(*ast.StructType)
 			if !ok {
-				logf("Ignoring AST type %T, Name=%q", ts.Type, ts.Name.String())
+				logf("Ignoring AST type %T, Name=%q", ts.Type, ts.Name)
 				continue
 			}
 			for _, field := range st.Fields.List {
@@ -215,7 +215,7 @@ func (t *templateData) processAST(f *ast.File) error {
 
 				se, ok := field.Type.(*ast.StarExpr)
 				if !ok {
-					logf("Ignoring type %T for Name=%q, FieldName=%q", field.Type, ts.Name.String(), fieldName.String())
+					logf("Ignoring type %T for Name=%q, FieldName=%q", field.Type, ts.Name, fieldName)
 					continue
 				}
 
@@ -251,7 +251,7 @@ func (t *templateData) addMapType(receiverType, fieldName string) {
 
 func (t *templateData) addIdent(x *ast.Ident, receiverType, fieldName string) {
 	var zeroValue string
-	var namedStruct = false
+	var namedStruct bool
 	switch x.String() {
 	case "int":
 		zeroValue = "0"
@@ -275,7 +275,7 @@ func (t *templateData) addIdent(x *ast.Ident, receiverType, fieldName string) {
 
 func (t *templateData) addIdentPtr(x *ast.Ident, receiverType, fieldName string) {
 	var zeroValue string
-	var namedStruct = false
+	var namedStruct bool
 	switch x.String() {
 	case "int":
 		zeroValue = "Ptr(0)"
@@ -299,7 +299,7 @@ func (t *templateData) addIdentPtr(x *ast.Ident, receiverType, fieldName string)
 
 func (t *templateData) addIdentSlice(x *ast.Ident, receiverType, fieldName string) {
 	var zeroValue string
-	var namedStruct = false
+	var namedStruct bool
 	switch x.String() {
 	case "int":
 		zeroValue = "[]int{0}"
@@ -349,20 +349,20 @@ func (t *templateData) dump() error {
 	}
 	clean, err := format.Source(buf.Bytes())
 	if err != nil {
-		log.Printf("failed-to-format source:\n%v", buf.String())
+		log.Printf("failed-to-format source:\n%v", buf)
 		return err
 	}
 
 	logf("Writing %v...", t.filename)
-	if err := os.Chmod(t.filename, 0644); err != nil {
+	if err := os.Chmod(t.filename, 0o644); err != nil {
 		return fmt.Errorf("os.Chmod(%q, 0644): %v", t.filename, err)
 	}
 
-	if err := os.WriteFile(t.filename, clean, 0444); err != nil {
+	if err := os.WriteFile(t.filename, clean, 0o444); err != nil {
 		return err
 	}
 
-	if err := os.Chmod(t.filename, 0444); err != nil {
+	if err := os.Chmod(t.filename, 0o444); err != nil {
 		return fmt.Errorf("os.Chmod(%q, 0444): %v", t.filename, err)
 	}
 

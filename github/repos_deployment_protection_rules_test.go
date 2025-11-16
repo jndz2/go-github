@@ -6,11 +6,9 @@
 package github
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -25,7 +23,7 @@ func TestRepositoriesService_GetAllDeploymentProtectionRules(t *testing.T) {
 		fmt.Fprint(w, `{"total_count":2, "custom_deployment_protection_rules":[{ "id": 3, "node_id": "IEH37kRlcGxveW1lbnRTdGF0ddiv", "enabled": true, "app": { "id": 1, "node_id": "GHT58kRlcGxveW1lbnRTdTY!bbcy", "slug": "a-custom-app", "integration_url": "https://api.github.com/apps/a-custom-app"}}, { "id": 4, "node_id": "MDE2OkRlcGxveW1lbnRTdHJ41128", "enabled": true, "app": { "id": 1, "node_id": "UHVE67RlcGxveW1lbnRTdTY!jfeuy", "slug": "another-custom-app", "integration_url": "https://api.github.com/apps/another-custom-app"}}]}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	got, _, err := client.Repositories.GetAllDeploymentProtectionRules(ctx, "o", "r", "e")
 	if err != nil {
 		t.Errorf("Repositories.GetAllDeploymentProtectionRules returned error: %v", err)
@@ -38,7 +36,7 @@ func TestRepositoriesService_GetAllDeploymentProtectionRules(t *testing.T) {
 		},
 		TotalCount: Ptr(2),
 	}
-	if !reflect.DeepEqual(got, want) {
+	if !cmp.Equal(got, want) {
 		t.Errorf("Repositories.GetAllDeploymentProtectionRules = %+v, want %+v", got, want)
 	}
 
@@ -66,14 +64,14 @@ func TestRepositoriesService_CreateCustomDeploymentProtectionRule(t *testing.T) 
 
 		testMethod(t, r, "POST")
 		want := input
-		if !reflect.DeepEqual(v, want) {
+		if !cmp.Equal(v, want) {
 			t.Errorf("Request body = %+v, want %+v", v, want)
 		}
 
 		fmt.Fprint(w, `{"id":3, "node_id": "IEH37kRlcGxveW1lbnRTdGF0ddiv", "enabled": true, "app": {"id": 1, "node_id": "GHT58kRlcGxveW1lbnRTdTY!bbcy", "slug": "a-custom-app", "integration_url": "https://api.github.com/apps/a-custom-app"}}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	got, _, err := client.Repositories.CreateCustomDeploymentProtectionRule(ctx, "o", "r", "e", input)
 	if err != nil {
 		t.Errorf("Repositories.CreateCustomDeploymentProtectionRule returned error: %v", err)
@@ -90,7 +88,7 @@ func TestRepositoriesService_CreateCustomDeploymentProtectionRule(t *testing.T) 
 			IntegrationURL: Ptr("https://api.github.com/apps/a-custom-app"),
 		},
 	}
-	if !reflect.DeepEqual(got, want) {
+	if !cmp.Equal(got, want) {
 		t.Errorf("Repositories.CreateCustomDeploymentProtectionRule = %+v, want %+v", got, want)
 	}
 
@@ -118,7 +116,7 @@ func TestRepositoriesService_ListCustomDeploymentRuleIntegrations(t *testing.T) 
 		fmt.Fprint(w, `{"total_count": 2, "available_custom_deployment_protection_rule_integrations": [{"id": 1, "node_id": "GHT58kRlcGxveW1lbnRTdTY!bbcy", "slug": "a-custom-app", "integration_url": "https://api.github.com/apps/a-custom-app"}, {"id": 2, "node_id": "UHVE67RlcGxveW1lbnRTdTY!jfeuy", "slug": "another-custom-app", "integration_url": "https://api.github.com/apps/another-custom-app"}]}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	got, _, err := client.Repositories.ListCustomDeploymentRuleIntegrations(ctx, "o", "r", "e")
 	if err != nil {
 		t.Errorf("Repositories.ListCustomDeploymentRuleIntegrations returned error: %v", err)
@@ -131,7 +129,7 @@ func TestRepositoriesService_ListCustomDeploymentRuleIntegrations(t *testing.T) 
 			{ID: Ptr(int64(2)), NodeID: Ptr("UHVE67RlcGxveW1lbnRTdTY!jfeuy"), Slug: Ptr("another-custom-app"), IntegrationURL: Ptr("https://api.github.com/apps/another-custom-app")},
 		},
 	}
-	if !reflect.DeepEqual(got, want) {
+	if !cmp.Equal(got, want) {
 		t.Errorf("Repositories.ListCustomDeploymentRuleIntegrations = %+v, want %+v", got, want)
 	}
 
@@ -154,7 +152,7 @@ func TestRepositoriesService_GetCustomDeploymentProtectionRule(t *testing.T) {
 		fmt.Fprint(w, `{"id":1, "node_id": "IEH37kRlcGxveW1lbnRTdGF0ddiv", "enabled": true, "app": {"id": 1, "node_id": "GHT58kRlcGxveW1lbnRTdTY!bbcy", "slug": "a-custom-app", "integration_url": "https://api.github.com/apps/a-custom-app"}}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	got, _, err := client.Repositories.GetCustomDeploymentProtectionRule(ctx, "o", "r", "e", 1)
 	if err != nil {
 		t.Errorf("Repositories.GetCustomDeploymentProtectionRule returned error: %v", err)
@@ -172,7 +170,7 @@ func TestRepositoriesService_GetCustomDeploymentProtectionRule(t *testing.T) {
 		},
 	}
 
-	if !reflect.DeepEqual(got, want) {
+	if !cmp.Equal(got, want) {
 		t.Errorf("Repositories.GetCustomDeploymentProtectionRule = %+v, want %+v", got, want)
 	}
 
@@ -195,7 +193,7 @@ func TestRepositoriesService_DisableCustomDeploymentProtectionRule(t *testing.T)
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	resp, err := client.Repositories.DisableCustomDeploymentProtectionRule(ctx, "o", "r", "e", 1)
 	if err != nil {
 		t.Errorf("Repositories.DisableCustomDeploymentProtectionRule returned error: %v", err)

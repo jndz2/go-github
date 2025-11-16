@@ -6,7 +6,6 @@
 package github
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -42,7 +41,7 @@ func TestOrganizationsService_ListIssueTypes(t *testing.T) {
 		]`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	issueTypes, _, err := client.Organizations.ListIssueTypes(ctx, "o")
 	if err != nil {
 		t.Errorf("Organizations.ListIssueTypes returned error: %v", err)
@@ -63,7 +62,8 @@ func TestOrganizationsService_ListIssueTypes(t *testing.T) {
 			Name:        Ptr("Bug"),
 			Description: Ptr("An unexpected problem or behavior"),
 			CreatedAt:   Ptr(Timestamp{time.Date(2024, 12, 11, 14, 39, 9, 0, time.UTC)}),
-			UpdatedAt:   Ptr(Timestamp{time.Date(2024, 12, 11, 14, 39, 9, 0, time.UTC)})},
+			UpdatedAt:   Ptr(Timestamp{time.Date(2024, 12, 11, 14, 39, 9, 0, time.UTC)}),
+		},
 	}
 	if !cmp.Equal(issueTypes, want) {
 		t.Errorf("Organizations.ListIssueTypes returned %+v, want %+v", issueTypes, want)
@@ -115,7 +115,7 @@ func TestOrganizationsService_CreateIssueType(t *testing.T) {
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	issueType, _, err := client.Organizations.CreateIssueType(ctx, "o", input)
 	if err != nil {
 		t.Errorf("Organizations.CreateIssueType returned error: %v", err)
@@ -179,7 +179,7 @@ func TestOrganizationsService_UpdateIssueType(t *testing.T) {
 		}`)
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	issueType, _, err := client.Organizations.UpdateIssueType(ctx, "o", 410, input)
 	if err != nil {
 		t.Errorf("Organizations.UpdateIssueType returned error: %v", err)
@@ -220,7 +220,7 @@ func TestOrganizationsService_DeleteIssueType(t *testing.T) {
 		testMethod(t, r, "DELETE")
 	})
 
-	ctx := context.Background()
+	ctx := t.Context()
 	_, err := client.Organizations.DeleteIssueType(ctx, "o", 410)
 	if err != nil {
 		t.Errorf("Organizations.DeleteIssueType returned error: %v", err)
