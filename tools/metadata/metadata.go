@@ -24,7 +24,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/google/go-github/v79/github"
+	"github.com/google/go-github/v80/github"
 	"gopkg.in/yaml.v3"
 )
 
@@ -333,13 +333,17 @@ func updateDocsVisitor(opsFile *operationsFile) nodeVisitor {
 		}
 		sort.Strings(docLinks)
 
-		for _, dl := range docLinks {
+		for i, dl := range docLinks {
 			group.List = append(
 				group.List,
 				&ast.Comment{
 					Text: "// GitHub API docs: " + cleanURLPath(dl),
 				},
 			)
+			if i < len(docLinks)-1 {
+				// add empty line between doc links
+				group.List = append(group.List, &ast.Comment{Text: "//"})
+			}
 		}
 		_, methodName, _ := strings.Cut(serviceMethod, ".")
 		for _, opName := range undocumentedOps {
@@ -516,5 +520,18 @@ func nodeServiceMethod(fn *ast.FuncDecl) string {
 		return ""
 	}
 
-	return id.Name + "." + fn.Name.Name
+	serviceMethod := id.Name + "." + fn.Name.Name
+	if skipServiceMethod[serviceMethod] {
+		return ""
+	}
+
+	return serviceMethod
+}
+
+// See: https://github.com/google/go-github/issues/3894
+var skipServiceMethod = map[string]bool{
+	"BillingService.GetOrganizationPackagesBilling": true,
+	"BillingService.GetOrganizationStorageBilling":  true,
+	"BillingService.GetPackagesBilling":             true,
+	"BillingService.GetStorageBilling":              true,
 }
