@@ -9290,17 +9290,6 @@ func TestCustomPatternBackfillScan_GetPatternSlug(tt *testing.T) {
 	c.GetPatternSlug()
 }
 
-func TestCustomProperty_GetDefaultValue(tt *testing.T) {
-	tt.Parallel()
-	var zeroValue string
-	c := &CustomProperty{DefaultValue: &zeroValue}
-	c.GetDefaultValue()
-	c = &CustomProperty{}
-	c.GetDefaultValue()
-	c = nil
-	c.GetDefaultValue()
-}
-
 func TestCustomProperty_GetDescription(tt *testing.T) {
 	tt.Parallel()
 	var zeroValue string
@@ -13218,6 +13207,17 @@ func TestGenerateJITConfigRequest_GetWorkFolder(tt *testing.T) {
 	g.GetWorkFolder()
 	g = nil
 	g.GetWorkFolder()
+}
+
+func TestGenerateNotesOptions_GetConfigurationFilePath(tt *testing.T) {
+	tt.Parallel()
+	var zeroValue string
+	g := &GenerateNotesOptions{ConfigurationFilePath: &zeroValue}
+	g.GetConfigurationFilePath()
+	g = &GenerateNotesOptions{}
+	g.GetConfigurationFilePath()
+	g = nil
+	g.GetConfigurationFilePath()
 }
 
 func TestGenerateNotesOptions_GetPreviousTagName(tt *testing.T) {
@@ -29206,6 +29206,14 @@ func TestRateLimits_GetCore(tt *testing.T) {
 	r.GetCore()
 	r = nil
 	r.GetCore()
+}
+
+func TestRateLimits_GetDependencySBOM(tt *testing.T) {
+	tt.Parallel()
+	r := &RateLimits{}
+	r.GetDependencySBOM()
+	r = nil
+	r.GetDependencySBOM()
 }
 
 func TestRateLimits_GetDependencySnapshots(tt *testing.T) {
